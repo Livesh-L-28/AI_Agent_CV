@@ -142,3 +142,38 @@ async def test_analytics_and_correlation_headers():
         # Check correlation ID header echoed back
         assert res_vision.headers.get("X-Correlation-ID") == "test-custom-cid-12345"
         assert "X-Process-Time-Ms" in res_vision.headers
+
+
+@pytest.mark.asyncio
+async def test_agent_api_endpoints(monkeypatch):
+    monkeypatch.setenv("ENABLE_MOCK_LLM", "true")
+
+    # Seed an event
+    async with get_db_session() as session:
+        src_repo = SourceRepository(session)
+        await src_repo.create_source("cam-agent-api", "Agent Cam", "replay", "uri")
+
+        evt_repo = EventRepository(session)
+        cand = SafetyEventCandidate(
+            event_id="evt_agent_api_99",
+            event_type=EventType.ZONE_ENTRY,
+            severity=EventSeverity.CRITICAL,
+            source_id="cam-agent-api",
+            track_id=99,
+            rule_id="RULE_TEST_AGENT",
+            first_observation_ns=1000,
+            last_observation_ns=2000,
+            persistence_count=5,
+            confidence=0.98,
+            deduplication_key="cam-agent-api:99:ZONE_ENTRY",
+        )
+        await evt_repo.create_from_candidate(cand)
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        # 1. Trigger agent investigation
+        res_inv = await client.post("/api/v1/agents/investigate/evt_agent_api_99")
+        assert res_inv.status_code == 200
+        inv_data = res_inv.json()
+        assert inv_data["status"] == "COMPLETED"
+        assert inv_data["policy_result"]["is_policy_violated"] is True
+        assert inv_data["verification"]["is_verified"] is True

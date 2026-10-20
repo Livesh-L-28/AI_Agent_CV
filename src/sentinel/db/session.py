@@ -24,6 +24,15 @@ _engine: Optional[AsyncEngine] = None
 _session_factory: Optional[async_sessionmaker[AsyncSession]] = None
 
 
+async def reset_engine() -> None:
+    """Disposes the current engine and resets the singleton for test isolation."""
+    global _engine, _session_factory
+    if _engine is not None:
+        await _engine.dispose()
+        _engine = None
+    _session_factory = None
+
+
 def get_engine(database_url: Optional[str] = None) -> AsyncEngine:
     """Returns or creates the singleton async database engine."""
     global _engine
@@ -65,6 +74,14 @@ async def init_db(engine: Optional[AsyncEngine] = None) -> None:
     async with eng.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     logger.info("Database schema initialized successfully.")
+
+
+async def reset_db(engine: Optional[AsyncEngine] = None) -> None:
+    """Drops and recreates all tables for pristine test isolation."""
+    eng = engine or get_engine()
+    async with eng.begin() as conn:
+        await conn.run_sync(Base.metadata.drop_all)
+        await conn.run_sync(Base.metadata.create_all)
 
 
 @asynccontextmanager

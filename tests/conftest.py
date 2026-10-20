@@ -15,8 +15,12 @@ def clean_environment(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> Generator[None, None, None]:
     """Ensures each test operates with clean environment variables and temporary paths."""
-    # Reset cached settings
+    from sentinel.db import session as db_session
+
+    # Reset cached settings and engine singletons
     get_settings.cache_clear()
+    db_session._engine = None
+    db_session._session_factory = None
 
     # Point storage to tmp_path
     monkeypatch.setenv("EVIDENCE_STORAGE_PATH", str(tmp_path / "evidence"))
@@ -29,6 +33,8 @@ def clean_environment(
     yield
 
     get_settings.cache_clear()
+    db_session._engine = None
+    db_session._session_factory = None
 
 
 @pytest.fixture

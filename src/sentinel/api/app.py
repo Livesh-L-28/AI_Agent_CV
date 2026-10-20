@@ -11,6 +11,7 @@ from fastapi.responses import JSONResponse
 
 from sentinel.api.middleware import CorrelationIdMiddleware
 from sentinel.api.routers import (
+    agents,
     analytics,
     events,
     health,
@@ -70,6 +71,7 @@ def create_app() -> FastAPI:
     app.include_router(sources.router)
     app.include_router(events.router)
     app.include_router(incidents.router)
+    app.include_router(agents.router)
     app.include_router(analytics.router)
     app.include_router(stream.router)
 
