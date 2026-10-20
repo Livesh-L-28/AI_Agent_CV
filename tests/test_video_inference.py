@@ -3,7 +3,9 @@ Integration test verifying recorded-video inference end-to-end.
 """
 
 from pathlib import Path
+
 import cv2
+
 from sentinel.vision.adapter import YOLOAdapter
 
 

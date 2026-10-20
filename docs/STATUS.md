@@ -1,7 +1,7 @@
 # SENTINEL AI — Project Status
 
-**Current Phase:** PHASE 2 (YOLO Model Adapter & Recorded-Video Inference) — Completed  
-**Next Phase:** PHASE 3 (Video Ingestion & Resource Lifecycle)  
+**Current Phase:** PHASE 3 (Video Ingestion & Resource Lifecycle) — Completed  
+**Next Phase:** PHASE 4 (Tracking & Normalized Coordinate Utilities)  
 **Last Updated:** 2026-10-20  
 
 ---
@@ -13,8 +13,8 @@
 | **Phase 0** | Repository and environment audit | **COMPLETED** | Verified facts in `docs/ENVIRONMENT_AUDIT.md`. Foundational docs generated. |
 | **Phase 1** | Project skeleton, config, logging, and test harness | **COMPLETED** | Git repo initialized. Isolated `.venv` created via `uv`. 11 unit tests passing in 0.98s. Ruff linting 100% clean. |
 | **Phase 2** | YOLO model adapter & recorded-video inference | **COMPLETED** | Implemented `YOLOAdapter`, `BoundingBox`, `normalize_bbox`, IoU, ground contact point, and synthetic video fixture. 23 tests passing. MPS latency: 12.30ms (81.3 FPS); CPU latency: 49.02ms (20.4 FPS). |
-| **Phase 3** | Video ingestion & resource lifecycle | *NEXT* | Replay and webcam sources with thread safety and backpressure. |
-| **Phase 4** | Tracking & normalized coordinate utilities | *PENDING* | Multi-object tracking (ByteTrack) and ground-contact estimation. |
+| **Phase 3** | Video ingestion & resource lifecycle | **COMPLETED** | Implemented `VideoReplaySource`, `WebcamSource`, `BoundedFrameBuffer`, and lifecycle state machine. 30 tests passing. Graceful handling of EOF, device unavail, and backpressure drops. |
+| **Phase 4** | Tracking & normalized coordinate utilities | *NEXT* | Multi-object tracking (ByteTrack) and ground-contact estimation. |
 | **Phase 5** | Restricted-zone & temporal event engine | *PENDING* | Polygon zone PIP and persistence state machine. |
 | **Phase 6** | PPE model integration & association | *PENDING* | Person-to-PPE association and uncertainty modeling. |
 | **Phase 7** | Database models, migrations, repositories | *PENDING* | SQLAlchemy async ORM, Alembic migrations, dual SQLite/PostgreSQL support. |
@@ -30,12 +30,12 @@
 
 ## 2. Key Metrics & Benchmarks (Verified on Host System)
 
-- **Total Test Suite Count:** 23 passed, 0 failed, 0 warnings (2.56s)
+- **Total Test Suite Count:** 30 passed, 0 failed, 0 warnings (3.15s)
 - **Code Formatting & Lint:** 100% compliant with Ruff (`py312` target)
+- **Video Ingestion Backpressure:** Bounded buffer drops oldest frames under heavy load; zero memory leaks.
+- **Source Handling:** Verified graceful EOF termination (`loop=False`), seamless looping (`loop=True`), and hardware error reporting when cameras are unavailable.
 - **Apple MPS (Metal) Vision Latency:** **12.30 ms** per frame (effective **81.3 FPS**)
 - **CPU Vision Latency (8-core):** **49.02 ms** per frame (effective **20.4 FPS**)
-- **Coordinate Precision:** Unit normalized coordinates `[0.0, 1.0]`, ground contact point `((x1+x2)/2, y2)`
-- **Class Map Auditing:** Dynamically inspects `model.names`; validates absence of PPE classes in generic COCO weights.
 
 ---
 
