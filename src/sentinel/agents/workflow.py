@@ -4,6 +4,7 @@ Coordinates Agent A (Investigator), Agent B (Policy Gate), Agent C (Responder),
 and Agent D (Verifier) with bounded state transitions and failure recovery.
 """
 
+import json
 import time
 import uuid
 
@@ -96,14 +97,24 @@ class SafetyAgentWorkflow:
 
         try:
             raw = await self.provider.generate_structured(prompt, system_instruction)
+            raw_risk = raw.get("risk_assessment", f"Severity: {event.severity.value}")
+            if isinstance(raw_risk, dict):
+                risk_str = f"{raw_risk.get('risk_level', 'High')}: {raw_risk.get('reason', raw_risk.get('rationale', json.dumps(raw_risk)))}"
+            elif isinstance(raw_risk, str):
+                risk_str = raw_risk
+            else:
+                risk_str = str(raw_risk)
+
+            cited_ids = raw.get("cited_evidence_ids")
+            if not cited_ids:
+                cited_ids = [d.class_name for d in event.supporting_detections]
+
             state.investigation = InvestigationResult(
-                summary=raw.get("summary", "Automated spatial event observation."),
-                cited_evidence_ids=raw.get(
-                    "cited_evidence_ids", [d.class_name for d in event.supporting_detections]
-                ),
-                is_sufficient_evidence=raw.get("is_sufficient_evidence", True),
+                summary=str(raw.get("summary", "Automated spatial event observation.")),
+                cited_evidence_ids=cited_ids,
+                is_sufficient_evidence=bool(raw.get("is_sufficient_evidence", True)),
                 missing_evidence=raw.get("missing_evidence", []),
-                risk_assessment=raw.get("risk_assessment", f"Severity: {event.severity.value}"),
+                risk_assessment=risk_str,
             )
         except Exception as e:
             logger.warning(

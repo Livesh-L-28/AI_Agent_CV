@@ -1,0 +1,72 @@
+{
+  "timestamp": "2026-10-20T21:11:54.535033+00:00",
+  "platform": {
+    "os": "Darwin",
+    "os_release": "27.0.0",
+    "machine": "arm64",
+    "python_version": "3.12.13",
+    "pytorch_version": "2.14.1",
+    "mps_available": true,
+    "cuda_available": false
+  },
+  "model": {
+    "architecture": "YOLOv8n (Ultralytics)",
+    "weights": "yolov8n.pt (COCO-pretrained)",
+    "input_resolution": "640x640",
+    "confidence_threshold": 0.35
+  },
+  "raw_inference_benchmarks": {
+    "cpu": {
+      "device": "cpu",
+      "iterations": 50,
+      "warmup_iterations": 10,
+      "mean_latency_ms": 41.63,
+      "std_latency_ms": 0.29,
+      "min_latency_ms": 40.88,
+      "p50_latency_ms": 41.65,
+      "p90_latency_ms": 41.96,
+      "p95_latency_ms": 42.11,
+      "p99_latency_ms": 42.24,
+      "max_latency_ms": 42.24,
+      "throughput_fps": 24.0
+    },
+    "mps": {
+      "device": "mps",
+      "iterations": 50,
+      "warmup_iterations": 10,
+      "mean_latency_ms": 12.51,
+      "std_latency_ms": 0.06,
+      "min_latency_ms": 12.32,
+      "p50_latency_ms": 12.51,
+      "p90_latency_ms": 12.59,
+      "p95_latency_ms": 12.6,
+      "p99_latency_ms": 12.66,
+      "max_latency_ms": 12.66,
+      "throughput_fps": 79.9
+    }
+  },
+  "end_to_end_pipeline_benchmarks": {
+    "cpu": {
+      "device": "cpu",
+      "total_frames_processed": 125,
+      "total_detections": 0,
+      "total_events_triggered": 0,
+      "total_wall_time_sec": 4.438,
+      "pipeline_throughput_fps": 28.2,
+      "mean_frame_latency_ms": 35.24,
+      "p95_frame_latency_ms": 35.56,
+      "active_tracks_at_end": 0
+    },
+    "mps": {
+      "device": "mps",
+      "total_frames_processed": 125,
+      "total_detections": 0,
+      "total_events_triggered": 0,
+      "total_wall_time_sec": 1.7,
+      "pipeline_throughput_fps": 73.5,
+      "mean_frame_latency_ms": 13.34,
+      "p95_frame_latency_ms": 12.89,
+      "active_tracks_at_end": 0
+    }
+  }
+}

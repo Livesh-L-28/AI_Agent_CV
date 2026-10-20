@@ -4,6 +4,7 @@ Generates a 5-second 640x480 video with a moving worker and defined safety zone.
 """
 
 from pathlib import Path
+
 import cv2
 import numpy as np
 
