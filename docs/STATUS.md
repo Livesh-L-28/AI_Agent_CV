@@ -1,7 +1,7 @@
 # SENTINEL AI — Project Status
 
-**Current Phase:** PHASE 1 (Project Skeleton, Configuration, Linting, and Tests) — Completed  
-**Next Phase:** PHASE 2 (YOLO Model Adapter & Recorded-Video Inference)  
+**Current Phase:** PHASE 2 (YOLO Model Adapter & Recorded-Video Inference) — Completed  
+**Next Phase:** PHASE 3 (Video Ingestion & Resource Lifecycle)  
 **Last Updated:** 2026-10-20  
 
 ---
@@ -12,8 +12,8 @@
 | :--- | :--- | :--- | :--- |
 | **Phase 0** | Repository and environment audit | **COMPLETED** | Verified facts in `docs/ENVIRONMENT_AUDIT.md`. Foundational docs generated. |
 | **Phase 1** | Project skeleton, config, logging, and test harness | **COMPLETED** | Git repo initialized. Isolated `.venv` created via `uv`. 11 unit tests passing in 0.98s. Ruff linting 100% clean. |
-| **Phase 2** | YOLO model adapter & recorded-video inference | *NEXT* | Ultralytics/PyTorch adapter with class validation and coordinate math. |
-| **Phase 3** | Video ingestion & resource lifecycle | *PENDING* | Replay and webcam sources with thread safety and backpressure. |
+| **Phase 2** | YOLO model adapter & recorded-video inference | **COMPLETED** | Implemented `YOLOAdapter`, `BoundingBox`, `normalize_bbox`, IoU, ground contact point, and synthetic video fixture. 23 tests passing. MPS latency: 12.30ms (81.3 FPS); CPU latency: 49.02ms (20.4 FPS). |
+| **Phase 3** | Video ingestion & resource lifecycle | *NEXT* | Replay and webcam sources with thread safety and backpressure. |
 | **Phase 4** | Tracking & normalized coordinate utilities | *PENDING* | Multi-object tracking (ByteTrack) and ground-contact estimation. |
 | **Phase 5** | Restricted-zone & temporal event engine | *PENDING* | Polygon zone PIP and persistence state machine. |
 | **Phase 6** | PPE model integration & association | *PENDING* | Person-to-PPE association and uncertainty modeling. |
@@ -28,13 +28,14 @@
 
 ---
 
-## 2. Key Metrics & Benchmarks
+## 2. Key Metrics & Benchmarks (Verified on Host System)
 
-- **Phase 1 Unit Tests:** 11 passed, 0 failed, 0 warnings (0.98s)
+- **Total Test Suite Count:** 23 passed, 0 failed, 0 warnings (2.56s)
 - **Code Formatting & Lint:** 100% compliant with Ruff (`py312` target)
-- **Inference Runtime Detection:** Verified Apple MPS and CPU fallback in config
-- **Vision Detector Latency:** TBD (Phase 2 target: < 30ms on Apple Silicon CPU/MPS)
-- **Effective FPS:** TBD (Target: > 25 FPS)
+- **Apple MPS (Metal) Vision Latency:** **12.30 ms** per frame (effective **81.3 FPS**)
+- **CPU Vision Latency (8-core):** **49.02 ms** per frame (effective **20.4 FPS**)
+- **Coordinate Precision:** Unit normalized coordinates `[0.0, 1.0]`, ground contact point `((x1+x2)/2, y2)`
+- **Class Map Auditing:** Dynamically inspects `model.names`; validates absence of PPE classes in generic COCO weights.
 
 ---
 
