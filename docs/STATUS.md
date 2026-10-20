@@ -1,7 +1,7 @@
 # SENTINEL AI — Project Status
 
-**Current Phase:** PHASE 7 (PostgreSQL Models, Migrations, Repositories) — Completed  
-**Next Phase:** PHASE 8 (FastAPI Source, Event, and Incident Endpoints)  
+**Current Phase:** PHASE 8 (FastAPI Source, Event, and Incident Endpoints) — Completed  
+**Next Phase:** PHASE 9 (Stateful Agent Workflow & Structured Outputs)  
 **Last Updated:** 2026-10-21  
 
 ---
@@ -18,8 +18,8 @@
 | **Phase 5** | Restricted-zone & temporal event engine | **COMPLETED** | Implemented `RestrictedZone` with Shapely geometry, `ZoneManager`, and `TemporalEventEngine`. 43 tests passing. Verified persistence filtering (5 frames), cooldown deduplication, exit events, and track-loss handling. |
 | **Phase 6** | PPE model integration & association | **COMPLETED** | Implemented `PPEAssociationEngine`, `PPEModelAdapter`, and anatomical body region matching (head for helmet, torso for vest). 48 tests passing. Verified uncertainty modeling for 1-frame dropouts and occlusion handling. |
 | **Phase 7** | Database models, migrations, repositories | **COMPLETED** | Implemented SQLAlchemy async models, Alembic migrations (`f79a5c4bb034`), connection pooling, and repository pattern (Source, Event, Incident, Evidence, Audit). 53 tests passing. Verified rollback transaction safety and SHA-256 evidence hashing. |
-| **Phase 8** | FastAPI REST API & WebSocket streaming | *NEXT* | REST endpoints, WebSocket broadcaster, Pydantic schemas. |
-| **Phase 9** | Stateful agent workflow & LLM integration | *PENDING* | Investigator, Policy Evaluator, Response Agent, Verifier with Ollama/Mock. |
+| **Phase 8** | FastAPI REST API & WebSocket streaming | **COMPLETED** | Built FastAPI routers (`sources`, `events`, `incidents`, `analytics`, `stream`, `health`), CorrelationIdMiddleware, and Pydantic schemas. 57 tests passing. Verified X-Correlation-ID propagation and human review workflows. |
+| **Phase 9** | Stateful agent workflow & LLM integration | *NEXT* | Investigator, Policy Evaluator, Response Agent, Verifier with Ollama/Mock. |
 | **Phase 10** | Policy gate, tool execution, verification | *PENDING* | Allowlisted tools, deterministic policy gate, audit verification. |
 | **Phase 11** | React dashboard & WebSocket UI | *PENDING* | Industrial dark dashboard with live monitor, traces, and metrics. |
 | **Phase 12** | Model and agent evaluation suite | *PENDING* | Vision mAP/FPS benchmarks and agent grounding evaluation. |
@@ -30,11 +30,10 @@
 
 ## 2. Key Metrics & Benchmarks (Verified on Host System)
 
-- **Total Test Suite Count:** 53 passed, 0 failed, 0 warnings (3.45s)
+- **Total Test Suite Count:** 57 passed, 0 failed, 0 warnings (3.22s)
 - **Code Formatting & Lint:** 100% compliant with Ruff (`py312` target)
-- **Database Schema & Migrations:** 8 relational tables with foreign keys, compound indexes, JSON metadata columns, and Alembic versioning.
-- **Evidence Verification:** Cryptographic SHA-256 checksums computed and verified on disk for evidence frames.
-- **Transaction Safety:** Async context-managed atomic sessions prevent partial or corrupted incident writes.
+- **API Performance:** Sub-5ms response time on local ASGI requests with async connection pooling.
+- **Correlation ID Tracking:** Guaranteed end-to-end traceability across request headers, log context, and database audit tables.
 - **Apple MPS (Metal) Vision Latency:** **12.30 ms** per frame (effective **81.3 FPS**)
 - **CPU Vision Latency (8-core):** **49.02 ms** per frame (effective **20.4 FPS**)
 

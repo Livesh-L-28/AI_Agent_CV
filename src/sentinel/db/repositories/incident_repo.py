@@ -68,4 +68,5 @@ class IncidentRepository:
             if resolution_notes is not None:
                 incident.resolution_notes = resolution_notes
             await self.session.flush()
+            await self.session.refresh(incident)
         return incident
