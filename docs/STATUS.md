@@ -1,7 +1,7 @@
 # SENTINEL AI — Project Status
 
-**Current Phase:** PHASE 4 (Tracking & Normalized Coordinate Utilities) — Completed  
-**Next Phase:** PHASE 5 (Restricted-Zone & Temporal Event Engine)  
+**Current Phase:** PHASE 5 (Restricted-Zone & Temporal Event Engine) — Completed  
+**Next Phase:** PHASE 6 (PPE Model Integration & Association)  
 **Last Updated:** 2026-10-20  
 
 ---
@@ -15,8 +15,8 @@
 | **Phase 2** | YOLO model adapter & recorded-video inference | **COMPLETED** | Implemented `YOLOAdapter`, `BoundingBox`, `normalize_bbox`, IoU, ground contact point, and synthetic video fixture. 23 tests passing. MPS latency: 12.30ms (81.3 FPS); CPU latency: 49.02ms (20.4 FPS). |
 | **Phase 3** | Video ingestion & resource lifecycle | **COMPLETED** | Implemented `VideoReplaySource`, `WebcamSource`, `BoundedFrameBuffer`, and lifecycle state machine. 30 tests passing. Graceful handling of EOF, device unavail, and backpressure drops. |
 | **Phase 4** | Tracking & normalized coordinate utilities | **COMPLETED** | Implemented `MultiObjectTracker`, `TrackedEntity`, head/torso body region estimators, and trajectory history. 35 tests passing. Verified track ID stability and occlusion tolerance. |
-| **Phase 5** | Restricted-zone & temporal event engine | *NEXT* | Polygon zone PIP and persistence state machine. |
-| **Phase 6** | PPE model integration & association | *PENDING* | Person-to-PPE association and uncertainty modeling. |
+| **Phase 5** | Restricted-zone & temporal event engine | **COMPLETED** | Implemented `RestrictedZone` with Shapely geometry, `ZoneManager`, and `TemporalEventEngine`. 43 tests passing. Verified persistence filtering (5 frames), cooldown deduplication, exit events, and track-loss handling. |
+| **Phase 6** | PPE model integration & association | *NEXT* | Person-to-PPE association and uncertainty modeling. |
 | **Phase 7** | Database models, migrations, repositories | *PENDING* | SQLAlchemy async ORM, Alembic migrations, dual SQLite/PostgreSQL support. |
 | **Phase 8** | FastAPI REST API & WebSocket streaming | *PENDING* | REST endpoints, WebSocket broadcaster, Pydantic schemas. |
 | **Phase 9** | Stateful agent workflow & LLM integration | *PENDING* | Investigator, Policy Evaluator, Response Agent, Verifier with Ollama/Mock. |
@@ -30,10 +30,10 @@
 
 ## 2. Key Metrics & Benchmarks (Verified on Host System)
 
-- **Total Test Suite Count:** 35 passed, 0 failed, 0 warnings (3.43s)
+- **Total Test Suite Count:** 43 passed, 0 failed, 0 warnings (3.27s)
 - **Code Formatting & Lint:** 100% compliant with Ruff (`py312` target)
+- **Temporal Event Processing:** Zero false positives from 1-frame transient noise; strictly deterministic persistence windows (5-frame threshold).
 - **Multi-Object Tracking:** Stable track IDs across frames; tolerates up to 15 frames of occlusion without identity switches.
-- **Trajectory Retention:** Bounded 150-point trajectory history per tracked entity.
 - **Apple MPS (Metal) Vision Latency:** **12.30 ms** per frame (effective **81.3 FPS**)
 - **CPU Vision Latency (8-core):** **49.02 ms** per frame (effective **20.4 FPS**)
 
