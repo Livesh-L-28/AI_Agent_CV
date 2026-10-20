@@ -1,7 +1,7 @@
 # SENTINEL AI — Project Status
 
-**Current Phase:** PHASE 3 (Video Ingestion & Resource Lifecycle) — Completed  
-**Next Phase:** PHASE 4 (Tracking & Normalized Coordinate Utilities)  
+**Current Phase:** PHASE 4 (Tracking & Normalized Coordinate Utilities) — Completed  
+**Next Phase:** PHASE 5 (Restricted-Zone & Temporal Event Engine)  
 **Last Updated:** 2026-10-20  
 
 ---
@@ -14,8 +14,8 @@
 | **Phase 1** | Project skeleton, config, logging, and test harness | **COMPLETED** | Git repo initialized. Isolated `.venv` created via `uv`. 11 unit tests passing in 0.98s. Ruff linting 100% clean. |
 | **Phase 2** | YOLO model adapter & recorded-video inference | **COMPLETED** | Implemented `YOLOAdapter`, `BoundingBox`, `normalize_bbox`, IoU, ground contact point, and synthetic video fixture. 23 tests passing. MPS latency: 12.30ms (81.3 FPS); CPU latency: 49.02ms (20.4 FPS). |
 | **Phase 3** | Video ingestion & resource lifecycle | **COMPLETED** | Implemented `VideoReplaySource`, `WebcamSource`, `BoundedFrameBuffer`, and lifecycle state machine. 30 tests passing. Graceful handling of EOF, device unavail, and backpressure drops. |
-| **Phase 4** | Tracking & normalized coordinate utilities | *NEXT* | Multi-object tracking (ByteTrack) and ground-contact estimation. |
-| **Phase 5** | Restricted-zone & temporal event engine | *PENDING* | Polygon zone PIP and persistence state machine. |
+| **Phase 4** | Tracking & normalized coordinate utilities | **COMPLETED** | Implemented `MultiObjectTracker`, `TrackedEntity`, head/torso body region estimators, and trajectory history. 35 tests passing. Verified track ID stability and occlusion tolerance. |
+| **Phase 5** | Restricted-zone & temporal event engine | *NEXT* | Polygon zone PIP and persistence state machine. |
 | **Phase 6** | PPE model integration & association | *PENDING* | Person-to-PPE association and uncertainty modeling. |
 | **Phase 7** | Database models, migrations, repositories | *PENDING* | SQLAlchemy async ORM, Alembic migrations, dual SQLite/PostgreSQL support. |
 | **Phase 8** | FastAPI REST API & WebSocket streaming | *PENDING* | REST endpoints, WebSocket broadcaster, Pydantic schemas. |
@@ -30,10 +30,10 @@
 
 ## 2. Key Metrics & Benchmarks (Verified on Host System)
 
-- **Total Test Suite Count:** 30 passed, 0 failed, 0 warnings (3.15s)
+- **Total Test Suite Count:** 35 passed, 0 failed, 0 warnings (3.43s)
 - **Code Formatting & Lint:** 100% compliant with Ruff (`py312` target)
-- **Video Ingestion Backpressure:** Bounded buffer drops oldest frames under heavy load; zero memory leaks.
-- **Source Handling:** Verified graceful EOF termination (`loop=False`), seamless looping (`loop=True`), and hardware error reporting when cameras are unavailable.
+- **Multi-Object Tracking:** Stable track IDs across frames; tolerates up to 15 frames of occlusion without identity switches.
+- **Trajectory Retention:** Bounded 150-point trajectory history per tracked entity.
 - **Apple MPS (Metal) Vision Latency:** **12.30 ms** per frame (effective **81.3 FPS**)
 - **CPU Vision Latency (8-core):** **49.02 ms** per frame (effective **20.4 FPS**)
 
