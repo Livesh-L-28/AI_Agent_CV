@@ -4,6 +4,7 @@ Configures CORS, middleware, lifecycle events, and API routers.
 """
 
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -74,6 +75,14 @@ def create_app() -> FastAPI:
     app.include_router(agents.router)
     app.include_router(analytics.router)
     app.include_router(stream.router)
+
+    # Optional static dashboard mounting for production deployment
+    for candidate in [Path("frontend/dist"), Path("/app/frontend/dist")]:
+        if candidate.is_dir():
+            from fastapi.staticfiles import StaticFiles
+
+            app.mount("/", StaticFiles(directory=str(candidate), html=True), name="frontend")
+            break
 
     # Exception Handlers
     @app.exception_handler(HTTPException)

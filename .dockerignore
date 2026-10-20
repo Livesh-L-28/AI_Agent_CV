@@ -1,0 +1,53 @@
+# Python artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.venv/
+venv/
+env/
+
+# Environment and sensitive keys
+.env
+.env.local
+*.pem
+*.key
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Test and linting caches
+.pytest_cache/
+.coverage
+htmlcov/
+.ruff_cache/
+.mypy_cache/
+
+# Git & IDE
+.git/
+.gitignore
+.DS_Store
+.idea/
+.vscode/
+
+# Frontend node_modules and dev files
+frontend/node_modules/
+frontend/dist/
+frontend/.env.local
+npm-debug.log*
+
+# Large media and runs
+runs/
+*.mp4
+*.avi
+*.mkv
+data/evidence/*
+!data/evidence/.gitkeep
+data/uploads/*
+!data/uploads/.gitkeep

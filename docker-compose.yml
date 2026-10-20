@@ -1,0 +1,75 @@
+services:
+  # ==========================================
+  # PostgreSQL Relational Database Service
+  # ==========================================
+  db:
+    image: postgres:16-alpine
+    container_name: sentinel-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: sentinel
+      POSTGRES_PASSWORD: sentinel_secure_password
+      POSTGRES_DB: sentinel_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sentinel -d sentinel_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # ==========================================
+  # SENTINEL AI Platform Backend & Dashboard
+  # ==========================================
+  sentinel-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sentinel-api
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    environment:
+      - ENVIRONMENT=production
+      - LOG_LEVEL=INFO
+      - DATABASE_URL=postgresql+asyncpg://sentinel:sentinel_secure_password@db:5432/sentinel_db
+      - YOLO_MODEL_PATH=yolov8n.pt
+      - YOLO_DEVICE=cpu
+      - YOLO_CONFIDENCE_THRESHOLD=0.35
+      - ZONE_PERSISTENCE_FRAMES=5
+      - PPE_PERSISTENCE_FRAMES=6
+      - EVENT_COOLDOWN_SECONDS=10.0
+      - LLM_PROVIDER=mock
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434
+      - OLLAMA_MODEL=llama3.2:3b
+      - EVIDENCE_STORAGE_PATH=/app/data/evidence
+      - UPLOAD_STORAGE_PATH=/app/data/uploads
+      - FIXTURES_PATH=/app/data/fixtures
+      - API_HOST=0.0.0.0
+      - API_PORT=8000
+      - ALLOWED_ORIGINS=http://localhost:8000,http://localhost:5173,http://localhost:3000
+    volumes:
+      - evidence_data:/app/data/evidence
+      - uploads_data:/app/data/uploads
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+volumes:
+  pgdata:
+    driver: local
+  evidence_data:
+    driver: local
+  uploads_data:
+    driver: local
