@@ -38,6 +38,7 @@ services:
     environment:
       - ENVIRONMENT=production
       - LOG_LEVEL=INFO
+      - SENTINEL_JWT_SECRET_KEY=${SENTINEL_JWT_SECRET_KEY:-default_compose_prod_secret_must_be_overridden_in_env_32b}
       - DATABASE_URL=postgresql+asyncpg://sentinel:sentinel_secure_password@db:5432/sentinel_db
       - YOLO_MODEL_PATH=yolov8n.pt
       - YOLO_DEVICE=cpu

@@ -1,0 +1,464 @@
+{
+  "schema_version": "1.0.0",
+  "factory_id": "factory-plant-alpha",
+  "name": "Verified Officer Facility Layout",
+  "site_id": "site-detroit-01",
+  "dimensions": {
+    "width_meters": 60.0,
+    "depth_meters": 40.0,
+    "height_meters": 10.0
+  },
+  "floors": [
+    {
+      "id": "floor-ground",
+      "name": "Ground Level Fabrication & Heavy Robotics",
+      "level": 0,
+      "elevation_meters": 0.0,
+      "width_meters": 60.0,
+      "depth_meters": 40.0
+    },
+    {
+      "id": "floor-mezzanine",
+      "name": "Mezzanine Quality Inspection Platform",
+      "level": 1,
+      "elevation_meters": 4.5,
+      "width_meters": 20.0,
+      "depth_meters": 15.0
+    }
+  ],
+  "equipment": [
+    {
+      "id": "equip-robot-01",
+      "name": "Robotic Welding Cell A (Fanuc 6-Axis)",
+      "category": "ROBOTIC_CELL",
+      "floor_id": "floor-ground",
+      "position": [
+        17.0,
+        0.0,
+        13.0
+      ],
+      "dimensions": [
+        8.0,
+        3.8,
+        6.0
+      ],
+      "rotation_deg": 0.0,
+      "status": "OPERATIONAL"
+    },
+    {
+      "id": "equip-robot-02",
+      "name": "Robotic Assembly Cell B (KUKA Arm)",
+      "category": "ROBOTIC_CELL",
+      "floor_id": "floor-ground",
+      "position": [
+        37.0,
+        0.0,
+        13.0
+      ],
+      "dimensions": [
+        8.0,
+        3.8,
+        6.0
+      ],
+      "rotation_deg": 0.0,
+      "status": "OPERATIONAL"
+    },
+    {
+      "id": "equip-cnc-01",
+      "name": "5-Axis CNC Milling Center #1",
+      "category": "CNC_MILL",
+      "floor_id": "floor-ground",
+      "position": [
+        10.0,
+        0.0,
+        28.0
+      ],
+      "dimensions": [
+        5.0,
+        3.2,
+        4.0
+      ],
+      "rotation_deg": 90.0,
+      "status": "OPERATIONAL"
+    },
+    {
+      "id": "equip-cnc-02",
+      "name": "Precision Lathe & Turning Center #2",
+      "category": "CNC_MILL",
+      "floor_id": "floor-ground",
+      "position": [
+        20.0,
+        0.0,
+        28.0
+      ],
+      "dimensions": [
+        5.0,
+        3.2,
+        4.0
+      ],
+      "rotation_deg": 90.0,
+      "status": "OPERATIONAL"
+    },
+    {
+      "id": "equip-conveyor-01",
+      "name": "Automated Logistics Conveyor Line",
+      "category": "CONVEYOR",
+      "floor_id": "floor-ground",
+      "position": [
+        32.0,
+        0.0,
+        22.0
+      ],
+      "dimensions": [
+        22.0,
+        1.2,
+        2.5
+      ],
+      "rotation_deg": 0.0,
+      "status": "OPERATIONAL"
+    },
+    {
+      "id": "equip-forklift-bay",
+      "name": "Autonomous Forklift Staging & Battery Charging",
+      "category": "FORKLIFT_BAY",
+      "floor_id": "floor-ground",
+      "position": [
+        52.0,
+        0.0,
+        32.0
+      ],
+      "dimensions": [
+        8.0,
+        2.5,
+        6.0
+      ],
+      "rotation_deg": 0.0,
+      "status": "OPERATIONAL"
+    },
+    {
+      "id": "equip-rack-west",
+      "name": "Heavy Component Storage Racks (West)",
+      "category": "RACK",
+      "floor_id": "floor-ground",
+      "position": [
+        5.0,
+        0.0,
+        10.0
+      ],
+      "dimensions": [
+        3.0,
+        6.5,
+        12.0
+      ],
+      "rotation_deg": 0.0,
+      "status": "OPERATIONAL"
+    },
+    {
+      "id": "equip-rack-east",
+      "name": "Finished Goods High-Bay Racks (East)",
+      "category": "RACK",
+      "floor_id": "floor-ground",
+      "position": [
+        55.0,
+        0.0,
+        10.0
+      ],
+      "dimensions": [
+        3.0,
+        6.5,
+        12.0
+      ],
+      "rotation_deg": 0.0,
+      "status": "OPERATIONAL"
+    }
+  ],
+  "walkways": [
+    {
+      "id": "walkway-central",
+      "name": "Central Pedestrian Safety Corridor",
+      "floor_id": "floor-ground",
+      "points": [
+        [
+          2.0,
+          20.0
+        ],
+        [
+          58.0,
+          20.0
+        ]
+      ],
+      "width_meters": 2.5
+    },
+    {
+      "id": "walkway-logistics",
+      "name": "North-South Logistics Transit Line",
+      "floor_id": "floor-ground",
+      "points": [
+        [
+          27.0,
+          2.0
+        ],
+        [
+          27.0,
+          38.0
+        ]
+      ],
+      "width_meters": 2.2
+    }
+  ],
+  "zones": [
+    {
+      "zone_id": "zone-robotics-01",
+      "name": "Welding Cell A Exclusion Zone",
+      "zone_type": "RESTRICTED",
+      "floor_id": "floor-ground",
+      "polygon_meters": [
+        [
+          11.0,
+          8.0
+        ],
+        [
+          23.0,
+          8.0
+        ],
+        [
+          23.0,
+          18.0
+        ],
+        [
+          11.0,
+          18.0
+        ]
+      ],
+      "height_meters": 3.5,
+      "color_hex": "#EF4444",
+      "active_rules": [
+        "RULE_NO_PEDESTRIANS",
+        "RULE_AUTO_STOP_PROXIMITY"
+      ]
+    },
+    {
+      "zone_id": "zone-robotics-02",
+      "name": "Assembly Cell B Exclusion Zone",
+      "zone_type": "RESTRICTED",
+      "floor_id": "floor-ground",
+      "polygon_meters": [
+        [
+          31.0,
+          8.0
+        ],
+        [
+          43.0,
+          8.0
+        ],
+        [
+          43.0,
+          18.0
+        ],
+        [
+          31.0,
+          18.0
+        ]
+      ],
+      "height_meters": 3.5,
+      "color_hex": "#EF4444",
+      "active_rules": [
+        "RULE_NO_PEDESTRIANS"
+      ]
+    },
+    {
+      "zone_id": "zone-forklift-01",
+      "name": "Forklift Operations High-Traffic Aisle",
+      "zone_type": "WARNING",
+      "floor_id": "floor-ground",
+      "polygon_meters": [
+        [
+          46.0,
+          26.0
+        ],
+        [
+          58.0,
+          26.0
+        ],
+        [
+          58.0,
+          38.0
+        ],
+        [
+          46.0,
+          38.0
+        ]
+      ],
+      "height_meters": 2.5,
+      "color_hex": "#F59E0B",
+      "active_rules": [
+        "RULE_HIGH_VISIBILITY_VEST_REQUIRED"
+      ]
+    },
+    {
+      "zone_id": "zone-safe-walkway",
+      "name": "Safe Personnel Walkway",
+      "zone_type": "SAFE",
+      "floor_id": "floor-ground",
+      "polygon_meters": [
+        [
+          0.0,
+          18.75
+        ],
+        [
+          60.0,
+          18.75
+        ],
+        [
+          60.0,
+          21.25
+        ],
+        [
+          0.0,
+          21.25
+        ]
+      ],
+      "height_meters": 2.5,
+      "color_hex": "#10B981",
+      "active_rules": [
+        "RULE_SAFE_TRANSIT_ZONE"
+      ]
+    }
+  ],
+  "cameras": [
+    {
+      "camera_id": "cam-facility-01",
+      "name": "Overhead North Robotic Bay Camera",
+      "floor_id": "floor-ground",
+      "position": [
+        17.0,
+        6.5,
+        4.0
+      ],
+      "target": [
+        17.0,
+        0.0,
+        14.0
+      ],
+      "height_meters": 6.5,
+      "fov_horizontal_deg": 80.0,
+      "calibrated": true,
+      "homography_matrix": [
+        [
+          24.5,
+          0.0,
+          10.0
+        ],
+        [
+          0.0,
+          20.0,
+          7.5
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "coverage_polygon_meters": [
+        [
+          8.0,
+          7.0
+        ],
+        [
+          26.0,
+          7.0
+        ],
+        [
+          28.0,
+          21.0
+        ],
+        [
+          6.0,
+          21.0
+        ]
+      ],
+      "enabled": true,
+      "status": "DISCONNECTED"
+    },
+    {
+      "camera_id": "cam-perimeter-01",
+      "name": "Forklift Staging South Gate Camera",
+      "floor_id": "floor-ground",
+      "position": [
+        52.0,
+        6.0,
+        39.0
+      ],
+      "target": [
+        52.0,
+        0.0,
+        30.0
+      ],
+      "height_meters": 6.0,
+      "fov_horizontal_deg": 75.0,
+      "calibrated": true,
+      "homography_matrix": [
+        [
+          18.0,
+          0.0,
+          44.0
+        ],
+        [
+          0.0,
+          15.0,
+          25.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "coverage_polygon_meters": [
+        [
+          45.0,
+          25.0
+        ],
+        [
+          59.0,
+          25.0
+        ],
+        [
+          59.0,
+          39.0
+        ],
+        [
+          45.0,
+          39.0
+        ]
+      ],
+      "enabled": true,
+      "status": "UNREGISTERED"
+    },
+    {
+      "camera_id": "cam-browser-01",
+      "name": "Operator Laptop Inspection Webcam",
+      "floor_id": "floor-ground",
+      "position": [
+        30.0,
+        1.5,
+        36.0
+      ],
+      "target": [
+        30.0,
+        1.5,
+        20.0
+      ],
+      "height_meters": 1.5,
+      "fov_horizontal_deg": 70.0,
+      "calibrated": false,
+      "homography_matrix": null,
+      "coverage_polygon_meters": [],
+      "enabled": true,
+      "status": "UNREGISTERED"
+    }
+  ],
+  "updated_at": "2026-10-21T08:00:00Z",
+  "updated_by": "twin_officer"
+}

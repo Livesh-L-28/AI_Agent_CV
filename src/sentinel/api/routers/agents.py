@@ -1,10 +1,11 @@
 """
 Agent Execution and Investigation Trace API Router.
+Protected with server-side JWT authentication and role-based access control.
 """
 
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 
 from sentinel.agents.providers import get_llm_provider
@@ -13,13 +14,22 @@ from sentinel.db.models import AgentRunModel, SafetyEventModel
 from sentinel.db.session import get_db_session
 from sentinel.logging import get_correlation_id
 from sentinel.rules.types import EventSeverity, EventType, SafetyEventCandidate
+from sentinel.security.auth import AuthenticatedUser, UserRole, require_role
 
 router = APIRouter(prefix="/api/v1/agents", tags=["Agents"])
 
 
 @router.post("/investigate/{event_id}")
-async def trigger_agent_investigation(event_id: str) -> dict[str, Any]:
-    """Triggers the 4-stage agentic workflow to investigate a safety event."""
+async def trigger_agent_investigation(
+    event_id: str,
+    user: AuthenticatedUser = Depends(
+        require_role(UserRole.SAFETY_OFFICER, UserRole.ADMIN)
+    ),
+) -> dict[str, Any]:
+    """
+    Triggers the 4-stage agentic workflow to investigate a safety event.
+    Requires SAFETY_OFFICER or ADMIN role.
+    """
     async with get_db_session() as session:
         # 1. Fetch safety event from DB
         stmt = select(SafetyEventModel).where(SafetyEventModel.id == event_id)
@@ -67,12 +77,18 @@ async def trigger_agent_investigation(event_id: str) -> dict[str, Any]:
             "actions_executed": len(state.action_results),
             "verification": state.verification.model_dump() if state.verification else None,
             "is_degraded_mode": state.is_degraded_mode,
+            "investigated_by": user.username,
         }
 
 
 @router.get("/runs/{run_id}")
-async def get_agent_run(run_id: str) -> dict[str, Any]:
-    """Retrieves an agent run's complete execution trace and tool logs."""
+async def get_agent_run(
+    run_id: str,
+    user: AuthenticatedUser = Depends(
+        require_role(UserRole.VIEWER, UserRole.SAFETY_OFFICER, UserRole.ADMIN)
+    ),
+) -> dict[str, Any]:
+    """Retrieves an agent run's complete execution trace and tool logs. Requires authenticated user."""
     async with get_db_session() as session:
         stmt = select(AgentRunModel).where(AgentRunModel.id == run_id)
         res = await session.execute(stmt)

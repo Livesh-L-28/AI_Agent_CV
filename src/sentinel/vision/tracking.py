@@ -37,6 +37,16 @@ class TrackedEntity(BaseModel):
     time_since_update: int = 0
     trajectory: list[tuple[int, tuple[float, float]]] = Field(default_factory=list)
 
+    @property
+    def bbox(self) -> BoundingBox:
+        """Alias for current_bbox for compatibility across visual renderers."""
+        return self.current_bbox
+
+    @property
+    def ground_contact_point(self) -> tuple[float, float]:
+        """Alias for ground_point for compatibility across spatial homography engines."""
+        return self.ground_point
+
     def add_observation(self, bbox: BoundingBox, confidence: float, frame_id: int) -> None:
         """Updates entity with a new detection observation."""
         self.current_bbox = bbox

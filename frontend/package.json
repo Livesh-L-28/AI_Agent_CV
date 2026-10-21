@@ -6,12 +6,15 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "test": "node --test scripts/test-digital-twin-lifecycle.mjs",
     "preview": "vite preview"
   },
   "dependencies": {
+    "@types/three": "^0.186.0",
     "lucide-react": "^0.359.0",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "three": "^0.186.1"
   },
   "devDependencies": {
     "@types/react": "^18.2.66",

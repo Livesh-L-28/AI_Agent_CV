@@ -23,6 +23,7 @@ from sentinel.db.models import AgentRunModel, ToolExecutionModel
 from sentinel.db.repositories.audit_repo import AuditRepository
 from sentinel.logging import setup_logging
 from sentinel.rules.types import SafetyEventCandidate
+from sentinel.security.auth import SYSTEM_CALLER
 
 logger = setup_logging()
 
@@ -159,6 +160,7 @@ class SafetyAgentWorkflow:
             tool_name=req_inc.tool_name,
             parameters=req_inc.parameters,
             idempotency_key=req_inc.idempotency_key,
+            caller=SYSTEM_CALLER,
         )
         state.action_results.append(res_inc)
 
@@ -179,6 +181,7 @@ class SafetyAgentWorkflow:
             tool_name=req_alert.tool_name,
             parameters=req_alert.parameters,
             idempotency_key=req_alert.idempotency_key,
+            caller=SYSTEM_CALLER,
         )
         state.action_results.append(res_alert)
 

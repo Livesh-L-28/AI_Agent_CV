@@ -187,3 +187,48 @@ def test_multi_worker_ppe_spatial_separation():
     assert obs_map[10][PPEType.HARDHAT].status == PPEStatus.COMPLIANT
     assert obs_map[20][PPEType.HARDHAT].status == PPEStatus.UNCERTAIN
     assert len(events) == 0
+
+
+def test_ppe_capability_disabled_bypasses_violations_for_coco_base():
+    """
+    DEF-02 Fix Verification:
+    When running with base COCO-80 where PPE classes are unsupported,
+    the engine MUST bypass compliance rules and NEVER emit false-positive violations.
+    """
+    engine = PPEAssociationEngine(persistence_threshold=3, ppe_capability_enabled=False)
+
+    worker = Detection(
+        class_id=0,
+        class_name="person",
+        confidence=0.92,
+        bbox=BoundingBox(x1=0.2, y1=0.2, x2=0.4, y2=0.8),
+        track_id=100,
+    )
+
+    # 10 frames with no helmet
+    for f in range(1, 11):
+        obs_map, events = engine.associate_frame(
+            persons=[worker],
+            ppe_items=[],
+            frame_id=f,
+            timestamp_ns=time.time_ns(),
+            source_id="cam-coco",
+        )
+        assert len(events) == 0, f"False-positive violation emitted at frame {f}!"
+        assert obs_map[100][PPEType.HARDHAT].status == PPEStatus.UNCERTAIN
+        assert "unsupported by active model checkpoint" in obs_map[100][PPEType.HARDHAT].uncertainty_reason
+
+
+def test_yolo_adapter_model_capabilities_coco_introspection():
+    """Verifies that YOLOAdapter introspects COCO model checkpoint correctly."""
+    from sentinel.vision.adapter import YOLOAdapter
+
+    adapter = YOLOAdapter(model_path="yolov8n.pt", device="cpu")
+    caps = adapter.get_capabilities()
+
+    assert caps["total_classes"] == 80
+    assert caps["supports_person"] is True
+    assert caps["supports_ppe"] is False
+    assert caps["ppe_capability_status"] == "UNSUPPORTED_COCO_BASE"
+    assert caps["supported_ppe_types"]["HARDHAT"] is False
+    assert "Configure a licensed PPE-specific model" in caps["guidance"]

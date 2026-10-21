@@ -55,7 +55,7 @@ class BoundingBox(BaseModel):
     def ground_contact_point(self) -> tuple[float, float]:
         """
         Calculates the estimated ground-contact point (bottom-center of bounding box).
-        This is the OSHA / computer vision standard for spatial zone containment.
+        Geometric heuristic for spatial zone containment.
         """
         return ((self.x1 + self.x2) / 2.0, self.y2)
 

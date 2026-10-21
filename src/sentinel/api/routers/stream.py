@@ -1,6 +1,7 @@
 """
 WebSocket Live Telemetry and Event Streaming Router.
 Provides real-time updates for connected React dashboard clients.
+Protected with server-trusted token validation.
 """
 
 from typing import Any
@@ -8,6 +9,7 @@ from typing import Any
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
 from sentinel.logging import setup_logging
+from sentinel.security.auth import authenticate_websocket
 
 logger = setup_logging()
 
@@ -51,14 +53,21 @@ async def websocket_endpoint(websocket: WebSocket):
     """
     WebSocket endpoint for real-time video telemetry, bounding boxes,
     and instantaneous safety event alerts.
+    Requires verified JWT authentication token via ?token= query parameter or Authorization header.
     """
+    # 1. Server-side credential validation before acceptance
+    user = await authenticate_websocket(websocket)
+
+    # 2. Establish connection
     await stream_manager.connect(websocket)
     try:
-        # Send initial connection handshake
+        # Send initial connection handshake with authenticated caller context
         await websocket.send_json(
             {
                 "type": "HANDSHAKE",
                 "message": "Connected to SENTINEL AI Live Stream Engine",
+                "authenticated_user": user.username,
+                "role": user.role.value,
                 "active_clients": len(stream_manager.active_connections),
             }
         )
@@ -71,5 +80,5 @@ async def websocket_endpoint(websocket: WebSocket):
     except WebSocketDisconnect:
         stream_manager.disconnect(websocket)
     except Exception as e:
-        logger.error(f"WebSocket error: {e}")
+        logger.error(f"WebSocket error for user {user.username}: {e}")
         stream_manager.disconnect(websocket)

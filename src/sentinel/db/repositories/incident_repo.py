@@ -7,7 +7,7 @@ from typing import Optional
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from sentinel.db.models import IncidentModel
+from sentinel.db.models import IncidentModel, SafetyEventModel
 
 
 class IncidentRepository:
@@ -42,9 +42,17 @@ class IncidentRepository:
         self,
         status: Optional[str] = None,
         severity: Optional[str] = None,
+        camera_id: Optional[str] = None,
+        zone_id: Optional[str] = None,
         limit: int = 50,
     ) -> list[IncidentModel]:
         stmt = select(IncidentModel).order_by(IncidentModel.created_at.desc())
+        if camera_id or zone_id:
+            stmt = stmt.join(SafetyEventModel, IncidentModel.event_id == SafetyEventModel.id)
+            if camera_id:
+                stmt = stmt.where(SafetyEventModel.source_id == camera_id)
+            if zone_id:
+                stmt = stmt.where(SafetyEventModel.zone_id == zone_id)
         if status:
             stmt = stmt.where(IncidentModel.status == status)
         if severity:

@@ -73,9 +73,11 @@ data/evidence/*
 !data/evidence/.gitkeep
 data/uploads/*
 !data/uploads/.gitkeep
-data/fixtures/*
-!data/fixtures/.gitkeep
+!data/fixtures/factory_scene_sample.json
+!data/fixtures/synthetic_frame.jpg
+!data/fixtures/synthetic_safety_video.mp4
 runs/
 *.pt
+!yolov8n.pt
 *.onnx
 *.engine

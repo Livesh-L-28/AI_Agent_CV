@@ -43,6 +43,7 @@ COPY alembic/ ./alembic/
 COPY alembic.ini ./
 COPY scripts/ ./scripts/
 COPY yolov8n.pt ./
+COPY data/fixtures/ ./data/fixtures/
 
 # Copy built frontend assets from Stage 1
 COPY --from=frontend-builder /app/frontend/dist ./frontend/dist
@@ -50,12 +51,13 @@ COPY --from=frontend-builder /app/frontend/dist ./frontend/dist
 # Create storage directories with explicit permissions
 RUN mkdir -p /app/data/evidence /app/data/uploads /app/data/fixtures
 
-# Expose HTTP API & WebSocket port
+# Expose HTTP API & WebSocket port (Render dynamically sets $PORT)
+ENV PORT=8000
 EXPOSE 8000
 
-# Container healthcheck against verified health endpoint
+# Container healthcheck against verified health/readiness endpoint
 HEALTHCHECK --interval=15s --timeout=5s --start-period=10s --retries=3 \
-    CMD curl -f http://localhost:8000/api/v1/health || exit 1
+    CMD curl -f http://localhost:${PORT:-8000}/health/ready || exit 1
 
-# Default command: launch production ASGI server with uvicorn
-CMD ["uvicorn", "sentinel.api.app:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]
+# Default command: launch production ASGI server with uvicorn respecting $PORT
+CMD ["sh", "-c", "uvicorn sentinel.api.app:app --host 0.0.0.0 --port ${PORT:-8000} --workers 1"]

@@ -9,6 +9,19 @@ def calculate_ground_contact(bbox: BoundingBox) -> tuple[float, float]:
     """
     Calculates the normalized ground-contact point (bottom-center of bounding box).
     Standard reference for industrial safety floor zone containment.
+
+    LIMITATIONS & SAFETY NOTICE (DEF-08):
+    - Assumes the tracked subject is an upright pedestrian standing on a flat,
+      unobstructed horizontal surface at camera ground level (Z = 0).
+    - Monocular Parallax: Oblique camera angles project physical foot contact away from
+      the optical center line; objects closer to camera edges experience higher perspective shear.
+    - Foot Occlusion: When machinery, railings, or obstacles conceal a worker's feet,
+      the bottom of the detected bounding box corresponds to the occlusion boundary,
+      not physical ground contact.
+    - Non-Upright Postures: Kneeling, crouching, bending, or riding elevated equipment
+      displaces the bounding box base from actual floor contact.
+    - Elevation Shifts: Stairs, ramps, and elevated platforms violate planar ground assumptions.
+    - For calibrated metric coordinates, pair with sentinel.vision.geometry.PlanarHomography.
     """
     return ((bbox.x1 + bbox.x2) / 2.0, bbox.y2)
 

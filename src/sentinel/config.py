@@ -58,6 +58,13 @@ class Settings(BaseSettings):
     api_port: int = 8000
     allowed_origins: str = "http://localhost:3000,http://localhost:5173"
 
+    # Authentication & Security Configuration (Sprint 1A / DEF-01)
+    jwt_secret_key: Optional[str] = None
+    jwt_algorithm: str = "HS256"
+    jwt_access_token_expire_minutes: int = 60
+    jwt_issuer: str = "sentinel-auth"
+    jwt_audience: str = "sentinel-api"
+
     @field_validator("log_level")
     @classmethod
     def validate_log_level(cls, v: str) -> str:
@@ -89,6 +96,34 @@ class Settings(BaseSettings):
         except ImportError:
             pass
         return "cpu"
+
+    def validate_auth_secrets(self) -> None:
+        """
+        Validates authentication configuration and signing secrets.
+        Fails startup immediately if required secrets are missing or unsafe in protected environments.
+        """
+        insecure_keys = {"insecure-secret", "changeme", "secret", "default", "development-secret-key-sentinel"}
+        if self.environment in ("production", "staging"):
+            if not self.jwt_secret_key:
+                raise ValueError(
+                    f"CRITICAL SECURITY CONFIGURATION ERROR: 'jwt_secret_key' is required in {self.environment} mode."
+                )
+            if self.jwt_secret_key.lower() in insecure_keys:
+                raise ValueError(
+                    f"CRITICAL SECURITY CONFIGURATION ERROR: 'jwt_secret_key' uses an unsafe/known default in {self.environment} mode."
+                )
+            if len(self.jwt_secret_key) < 32:
+                raise ValueError(
+                    f"CRITICAL SECURITY CONFIGURATION ERROR: 'jwt_secret_key' must be at least 32 characters in {self.environment} mode."
+                )
+
+    def get_jwt_secret_key(self) -> str:
+        """Returns verified JWT signing secret, using a safe ephemeral development secret if in dev/test."""
+        self.validate_auth_secrets()
+        if self.jwt_secret_key:
+            return self.jwt_secret_key
+        # Ephemeral secret for zero-configuration local dev/test only
+        return "sentinel-insecure-dev-secret-key-32chars!!"
 
     def ensure_storage_dirs(self) -> None:
         """Creates required media storage directories if they do not exist."""

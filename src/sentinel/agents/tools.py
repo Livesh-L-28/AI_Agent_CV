@@ -3,7 +3,7 @@ Allowlisted Agent Tools with Strict Authorization, Input Validation, and Idempot
 Arbitrary code execution or unauthorized network access is strictly prohibited.
 """
 
-from typing import Any
+from typing import Any, Optional
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sentinel.agents.state import ActionResult
 from sentinel.db.models import IncidentModel, NotificationModel
 from sentinel.logging import setup_logging
+from sentinel.security.auth import AuthenticatedUser, UserRole
 
 logger = setup_logging()
 
@@ -20,6 +21,14 @@ ALLOWLISTED_TOOLS = {
     "send_supervisor_alert",
     "request_human_review",
     "get_incident_status",
+}
+
+# Role permissions per tool
+TOOL_ROLE_PERMISSIONS: dict[str, set[UserRole]] = {
+    "create_incident": {UserRole.SAFETY_OFFICER, UserRole.ADMIN},
+    "send_supervisor_alert": {UserRole.SAFETY_OFFICER, UserRole.ADMIN},
+    "request_human_review": {UserRole.SAFETY_OFFICER, UserRole.ADMIN},
+    "get_incident_status": {UserRole.VIEWER, UserRole.SAFETY_OFFICER, UserRole.ADMIN},
 }
 
 
@@ -130,9 +139,10 @@ async def execute_tool(
     tool_name: str,
     parameters: dict[str, Any],
     idempotency_key: str,
+    caller: Optional[AuthenticatedUser] = None,
 ) -> ActionResult:
-    """Dispatches a tool call with strict allowlist enforcement."""
-    # 1. Authorization Gate
+    """Dispatches a tool call with strict allowlist and caller authorization enforcement."""
+    # 1. Allowlist Gate
     if tool_name not in ALLOWLISTED_TOOLS:
         logger.error(f"Security Alert: Blocked unauthorized tool execution: {tool_name}")
         return ActionResult(
@@ -140,6 +150,28 @@ async def execute_tool(
             status="REJECTED_UNAUTHORIZED",
             output={},
             error=f"Tool '{tool_name}' is not in the authorized Sentinel AI allowlist",
+        )
+
+    # 2. Caller Authorization Gate
+    if caller is None:
+        logger.error(f"Security Alert: Blocked tool execution without authenticated caller: {tool_name}")
+        return ActionResult(
+            tool_name=tool_name,
+            status="REJECTED_UNAUTHORIZED",
+            output={},
+            error=f"Direct tool execution of '{tool_name}' requires an authorized caller",
+        )
+
+    allowed_roles = TOOL_ROLE_PERMISSIONS.get(tool_name, set())
+    if caller.role != UserRole.ADMIN and caller.role not in allowed_roles:
+        logger.error(
+            f"Security Alert: Caller '{caller.username}' with role '{caller.role.value}' denied for tool '{tool_name}'"
+        )
+        return ActionResult(
+            tool_name=tool_name,
+            status="REJECTED_UNAUTHORIZED",
+            output={},
+            error=f"Caller role '{caller.role.value}' is not authorized to execute tool '{tool_name}'",
         )
 
     try:

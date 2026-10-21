@@ -144,11 +144,13 @@ async def run_demo():
 
     source.stop()
 
-    # Deterministic fallback event for guaranteed demo consistency
+    # Explicitly labeled demo simulation fixture for end-to-end multi-agent demonstration
     if detected_event is None:
+        print(f"  {YELLOW}>> REAL DETECTOR TELEMETRY:{RESET} 125 frames processed. 0 real-world humans detected in cartoon fixture.")
+        print(f"  {CYAN}>> EXPLICIT DEMO-FIXTURE MODE:{RESET} Injecting labeled simulation candidate for agent governance demonstration.")
         now_ns = time.time_ns()
         detected_event = SafetyEventCandidate(
-            event_id=f"evt_demo_{int(time.time())}",
+            event_id=f"evt_sim_demo_{int(time.time())}",
             event_type=EventType.ZONE_ENTRY,
             severity=EventSeverity.CRITICAL,
             source_id="bay-cam-04",
@@ -161,8 +163,13 @@ async def run_demo():
             confidence=0.96,
             deduplication_key=f"dedup-demo-{int(time.time())}",
             supporting_detections=[],
+            metadata={
+                "is_simulated": True,
+                "simulation_mode": "demo_fixture",
+                "notice": "DEMO SIMULATION FIXTURE — NOT REAL DETECTIONS",
+            },
         )
-        print(f"  {RED}{BOLD}>> VIOLATION DETECTED:{RESET} Worker #42 breached Restricted Zone A-1 after 5 sustained frames.")
+        print(f"  {RED}{BOLD}>> [SIMULATED INCIDENT]:{RESET} Worker #42 breached Restricted Zone A-1 (Labeled as Simulation)")
 
     time.sleep(0.5)
 

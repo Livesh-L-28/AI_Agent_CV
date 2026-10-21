@@ -29,6 +29,7 @@ dependencies = [
     "httpx>=0.27.0",
     "python-multipart>=0.0.9",
     "websockets>=12.0",
+    "pyjwt>=2.8.0",
 ]
 
 [project.optional-dependencies]
@@ -48,6 +49,9 @@ addopts = "-ra -q --import-mode=importlib"
 testpaths = ["tests"]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
+filterwarnings = [
+    "ignore::starlette.exceptions.StarletteDeprecationWarning",
+]
 
 [tool.ruff]
 line-length = 100

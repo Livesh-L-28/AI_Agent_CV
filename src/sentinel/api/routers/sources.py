@@ -1,19 +1,24 @@
 """
 Video Source Management API Router.
+Protected with server-side JWT authentication and role-based access control.
 """
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 
 from sentinel.api.schemas import SourceCreateRequest, SourceResponse
 from sentinel.db.repositories.source_repo import SourceRepository
 from sentinel.db.session import get_db_session
+from sentinel.security.auth import AuthenticatedUser, UserRole, require_role
 
 router = APIRouter(prefix="/api/v1/sources", tags=["Sources"])
 
 
 @router.post("", response_model=SourceResponse, status_code=status.HTTP_201_CREATED)
-async def create_source(payload: SourceCreateRequest):
-    """Registers a new video source (webcam, replay, or upload)."""
+async def create_source(
+    payload: SourceCreateRequest,
+    user: AuthenticatedUser = Depends(require_role(UserRole.ADMIN)),
+):
+    """Registers a new video source. Requires ADMIN role."""
     async with get_db_session() as session:
         repo = SourceRepository(session)
         existing = await repo.get_by_id(payload.source_id)
@@ -43,8 +48,12 @@ async def create_source(payload: SourceCreateRequest):
 
 
 @router.get("", response_model=list[SourceResponse])
-async def list_sources():
-    """Lists all configured video sources."""
+async def list_sources(
+    user: AuthenticatedUser = Depends(
+        require_role(UserRole.VIEWER, UserRole.SAFETY_OFFICER, UserRole.ADMIN)
+    ),
+):
+    """Lists all configured video sources. Requires authenticated user."""
     async with get_db_session() as session:
         repo = SourceRepository(session)
         sources = await repo.list_sources()
@@ -63,8 +72,13 @@ async def list_sources():
 
 
 @router.post("/{source_id}/start", response_model=SourceResponse)
-async def start_source(source_id: str):
-    """Marks a source as active/running."""
+async def start_source(
+    source_id: str,
+    user: AuthenticatedUser = Depends(
+        require_role(UserRole.SAFETY_OFFICER, UserRole.ADMIN)
+    ),
+):
+    """Marks a source as active/running. Requires SAFETY_OFFICER or ADMIN role."""
     async with get_db_session() as session:
         repo = SourceRepository(session)
         source = await repo.get_by_id(source_id)
@@ -83,8 +97,13 @@ async def start_source(source_id: str):
 
 
 @router.post("/{source_id}/stop", response_model=SourceResponse)
-async def stop_source(source_id: str):
-    """Stops an active video source."""
+async def stop_source(
+    source_id: str,
+    user: AuthenticatedUser = Depends(
+        require_role(UserRole.SAFETY_OFFICER, UserRole.ADMIN)
+    ),
+):
+    """Stops an active video source. Requires SAFETY_OFFICER or ADMIN role."""
     async with get_db_session() as session:
         repo = SourceRepository(session)
         source = await repo.get_by_id(source_id)

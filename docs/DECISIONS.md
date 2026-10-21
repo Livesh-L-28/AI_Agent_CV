@@ -1,10 +1,14 @@
 # SENTINEL AI — Architectural Decision Records (ADRs)
 
+> [!IMPORTANT]
+> ### Safety Advisory Notice & Legal Disclaimer (DEF-12)
+> SENTINEL AI is an engineering research and advisory monitoring prototype. It is NOT certified safety-critical software, does not possess OSHA or CE safety certification, and cannot be used as an emergency-stop or life-safety interlock.
+
 ## ADR-001: Separation of Deterministic Safety Rules from Probabilistic LLM Reasoning
 - **Status:** Accepted
-- **Context:** Industrial safety systems require guaranteed adherence to OSHA and organizational safety policies. LLMs are probabilistic and susceptible to hallucinations, context drift, and non-deterministic variations.
+- **Context:** Industrial safety monitoring requires predictable adherence to organizational safety policies. LLMs are probabilistic and susceptible to hallucinations, context drift, and non-deterministic variations.
 - **Decision:** All safety-critical spatial checks (restricted zone entry/exit) and temporal persistence filters are evaluated using deterministic geometric algorithms (Shapely) and explicit state machines. The multi-agent workflow acts as an investigative assistant and contextual summarizer; the final policy gate is hard-coded and deterministic. An LLM cannot overturn a verified violation.
-- **Consequences:** Auditable safety decisions, zero risk of hallucinated safety waivers, OSHA compliance alignment.
+- **Consequences:** Auditable safety decisions, zero risk of hallucinated safety waivers, strict enforcement of configured policy thresholds. (Advisory prototype only; not certified for life-safety interlocks).
 
 ---
 

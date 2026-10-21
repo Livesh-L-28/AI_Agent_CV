@@ -1,14 +1,16 @@
 """
 Safety Events API Router.
+Protected with server-side JWT authentication and role-based access control.
 """
 
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from sentinel.api.schemas import EventResponse
 from sentinel.db.repositories.event_repo import EventRepository
 from sentinel.db.session import get_db_session
+from sentinel.security.auth import AuthenticatedUser, UserRole, require_role
 
 router = APIRouter(prefix="/api/v1/events", tags=["Events"])
 
@@ -18,8 +20,11 @@ async def list_events(
     event_type: Optional[str] = Query(None, description="Filter by event type"),
     source_id: Optional[str] = Query(None, description="Filter by source ID"),
     limit: int = Query(50, ge=1, le=200),
+    user: AuthenticatedUser = Depends(
+        require_role(UserRole.VIEWER, UserRole.SAFETY_OFFICER, UserRole.ADMIN)
+    ),
 ):
-    """Retrieves detected safety event candidates."""
+    """Retrieves detected safety event candidates. Requires authenticated user."""
     async with get_db_session() as session:
         repo = EventRepository(session)
         events = await repo.list_events(limit=limit, event_type=event_type, source_id=source_id)
@@ -45,8 +50,13 @@ async def list_events(
 
 
 @router.get("/{event_id}", response_model=EventResponse)
-async def get_event(event_id: str):
-    """Retrieves a specific safety event by ID."""
+async def get_event(
+    event_id: str,
+    user: AuthenticatedUser = Depends(
+        require_role(UserRole.VIEWER, UserRole.SAFETY_OFFICER, UserRole.ADMIN)
+    ),
+):
+    """Retrieves a specific safety event by ID. Requires authenticated user."""
     async with get_db_session() as session:
         repo = EventRepository(session)
         event = await repo.get_by_id(event_id)

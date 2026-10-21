@@ -69,10 +69,12 @@ class PPEAssociationEngine:
         persistence_threshold: int = 6,
         overlap_threshold: float = 0.35,
         cooldown_seconds: float = 15.0,
+        ppe_capability_enabled: bool = True,
     ) -> None:
         self.persistence_threshold = persistence_threshold
         self.overlap_threshold = overlap_threshold
         self.cooldown_ns = int(cooldown_seconds * 1_000_000_000)
+        self.ppe_capability_enabled = ppe_capability_enabled
 
         # Map of track_id -> WorkerPPEProfile
         self.profiles: dict[int, WorkerPPEProfile] = {}
@@ -102,6 +104,26 @@ class PPEAssociationEngine:
 
         frame_results: dict[int, dict[PPEType, PPEObservation]] = {}
         events: list[SafetyEventCandidate] = []
+
+        # DEF-02 Fix: When PPE capability is disabled (e.g. COCO checkpoint without PPE classes),
+        # honestly report UNCERTAIN status and never emit false-positive compliance violations.
+        if not self.ppe_capability_enabled:
+            for person in persons:
+                if person.track_id is None:
+                    continue
+                frame_results[person.track_id] = {
+                    req: PPEObservation(
+                        ppe_type=req,
+                        status=PPEStatus.UNCERTAIN,
+                        confidence=0.0,
+                        uncertainty_reason=(
+                            "PPE capability unsupported by active model checkpoint. "
+                            "Compliance rules bypassed to prevent false-positive violations."
+                        ),
+                    )
+                    for req in required_ppe
+                }
+            return frame_results, []
 
         # Separate ppe_items by category
         helmets = [

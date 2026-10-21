@@ -33,7 +33,7 @@ def evaluate_policy(state: AgentState) -> PolicyResult:
                 policy_rule_id=event.rule_id,
                 deterministic_severity="LOW",
                 recommended_action="LOG_ONLY",
-                rejection_reason="Persistence count below OSHA minimum 5 frames",
+                rejection_reason="Persistence count below configured minimum 5 frames",
             )
 
     # 2. PPE Violations
@@ -52,6 +52,24 @@ def evaluate_policy(state: AgentState) -> PolicyResult:
                 deterministic_severity="LOW",
                 recommended_action="LOG_ONLY",
                 rejection_reason="PPE dropout below temporal threshold",
+            )
+
+    # 2b. Unsafe Proximity Violations
+    if event.event_type == EventType.UNSAFE_PROXIMITY:
+        if event.persistence_count >= 3:
+            return PolicyResult(
+                is_policy_violated=True,
+                policy_rule_id=event.rule_id,
+                deterministic_severity=event.severity.value,
+                recommended_action="CREATE_INCIDENT_AND_ALERT",
+            )
+        else:
+            return PolicyResult(
+                is_policy_violated=False,
+                policy_rule_id=event.rule_id,
+                deterministic_severity="LOW",
+                recommended_action="LOG_ONLY",
+                rejection_reason="Proximity duration below temporal threshold",
             )
 
     # 3. Zone Exits and Normal Lifecycle

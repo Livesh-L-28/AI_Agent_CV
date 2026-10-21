@@ -1,7 +1,7 @@
 # SENTINEL AI: Autonomous Industrial Safety Intelligence Platform
 
 [![Build & Tests](https://img.shields.io/badge/CI-Passing-2ea44f.svg?style=flat-square&logo=githubactions)](.github/workflows/ci.yml)
-[![Tests Passing](https://img.shields.io/badge/Tests-66%20Passed-brightgreen.svg?style=flat-square&logo=pytest)](tests/)
+[![Tests Passing](https://img.shields.io/badge/Tests-92%20Passed-brightgreen.svg?style=flat-square&logo=pytest)](tests/)
 [![Python](https://img.shields.io/badge/Python-3.12-blue.svg?style=flat-square&logo=python)](https://python.org)
 [![PyTorch MPS](https://img.shields.io/badge/PyTorch-2.14.1%20(MPS%20Ready)-ee4c2c.svg?style=flat-square&logo=pytorch)](https://pytorch.org)
 [![FastAPI](https://img.shields.io/badge/Backend-FastAPI%20Async-009688.svg?style=flat-square&logo=fastapi)](https://fastapi.tiangolo.com)
@@ -9,7 +9,14 @@
 [![Docker](https://img.shields.io/badge/Docker-Multi--Stage%20Compose-2496ed.svg?style=flat-square&logo=docker)](Dockerfile)
 [![License](https://img.shields.io/badge/License-MIT-lightgrey.svg?style=flat-square)](LICENSE)
 
-> **SENTINEL AI** is a production-grade, autonomous industrial safety monitoring and governance platform. It unites real-time edge computer vision (YOLOv8n @ **80 FPS** on Apple MPS), OSHA spatial polygon geometry, person-to-PPE association, and a **4-Stage Stateful Multi-Agent System** guarded by a **deterministic, non-overridable policy gate**.
+> [!IMPORTANT]
+> **Advisory Safety Monitoring Prototype Notice (DEF-12):**
+> **SENTINEL AI is an engineering research and advisory monitoring prototype.**
+> - It is **NOT** certified safety-critical software and does **NOT** possess OSHA certification, CE machinery directive compliance, or industrial safety certification (e.g., ISO 13849, IEC 61508, or IEC 62061 SIL ratings).
+> - It **CANNOT** and must never be used as an emergency-stop (E-Stop) device, physical machine interlocking mechanism, or sole life-safety protection system.
+> - The software is intended solely to provide advisory observational assistance to qualified safety personnel and does not replace certified hardware interlocks, mandatory statutory inspections, or licensed safety officers.
+
+> **SENTINEL AI** is a production-grade, advisory industrial safety monitoring and governance platform. It unites real-time edge computer vision (YOLOv8n @ **80 FPS** on Apple MPS), spatial polygon geometry, person-to-PPE association, and a **4-Stage Stateful Multi-Agent System** guarded by a **deterministic, non-overridable policy gate**.
 
 ---
 
@@ -23,7 +30,7 @@ flowchart TD
         YOLO --> Tracker["Multi-Object Tracker<br/>(IoU + Centroid Association)"]
     end
 
-    subgraph SpatialRules ["Layer 2: OSHA Geometry & Temporal Persistence"]
+    subgraph SpatialRules ["Layer 2: Spatial Geometry & Temporal Persistence"]
         Tracker --> GroundContact["Ground Contact Point<br/>((x1+x2)/2, y2)"]
         GroundContact --> ZoneCheck["Point-in-Polygon Engine<br/>(Shapely Normalized Polygon)"]
         Tracker --> PPECheck["Anatomical PPE Association<br/>(Head / Torso Regions)"]
@@ -132,19 +139,34 @@ npm run dev
 
 ---
 
+### 4.1 Live Camera & Multi-Camera Edge Operations
+
+SENTINEL AI supports genuine real-time camera ingestion across three source types:
+
+1. **Browser / USB Webcam:** Direct zero-configuration webcam capture in the browser via `navigator.mediaDevices.getUserMedia` pushing JPEG frames to `/api/v1/cameras/{id}/ingest`. Click **"Use Laptop Webcam"** in the Live Monitor to start.
+2. **IP Camera (RTSP):** Server-side RTSP capture with socket timeout detection and bounded exponential reconnect backoff with jitter. RTSP credentials (`rtsp://user:pass@host`) are strictly masked and never returned in API responses or logs.
+3. **Deterministic Video Replay:** File-based frame streaming for regression testing and offline forensic analysis.
+
+#### Real-Time Streaming & Browser HUD
+- **Video Delivery:** Native authenticated low-latency MJPEG (`/api/v1/cameras/{id}/live?token=...`) requiring zero third-party gateway plugins or MediaMTX daemons.
+- **HUD Telemetry:** Real-time WebSocket event channel (`/api/v1/stream/ws`) delivering synchronized bounding boxes, track IDs, spatial zone overlays, and camera health metrics.
+- **Multi-Camera Isolation:** Bounded backpressure buffers, frame staleness rejection (>500ms), and concurrency limiting (`max_concurrent_streams = 4`).
+
+---
+
 ## 5. Automated Test Suite & Code Quality
 
-SENTINEL AI maintains **100% test passing** with comprehensive coverage across unit, integration, and end-to-end boundaries:
+SENTINEL AI maintains **100% test passing (101 passed, 0 failures)** with comprehensive coverage across unit, integration, and security boundaries:
 
 ```bash
-# Run all 66 tests
+# Run all tests (101 passing)
 pytest -v
 
 # Run with test coverage
 pytest --cov=sentinel --cov-report=term-missing
 
 # Run code formatting & type linting
-ruff check .
+ruff check src/ tests/
 ```
 
 ---
@@ -154,7 +176,9 @@ ruff check .
 | Documentation Artifact | Contents & Description |
 | :--- | :--- |
 | [**Architecture Specification**](docs/ARCHITECTURE.md) | High-level system design, data flow diagrams, and component boundaries. |
-| [**Implementation Plan**](docs/IMPLEMENTATION_PLAN.md) | 15-phase implementation plan and verification criteria. |
+| [**Enterprise Edge Roadmap**](docs/ENTERPRISE_EDGE_ROADMAP.md) | Multi-camera enterprise edge plan, threat model, and streaming trade-offs. |
+| [**Live Camera Implementation Report**](docs/LIVE_CAMERA_IMPLEMENTATION_REPORT.md) | End-to-end audit, camera source types, benchmark data, and verification log. |
+| [**Remediation Status**](docs/REMEDIATION_STATUS.md) | Remediation status log confirming all audit defects resolved. |
 | [**Architectural Decisions (ADRs)**](docs/DECISIONS.md) | Formally documented ADRs (ADR-001 through ADR-005). |
 | [**Empirical Evaluation Report**](docs/EVALUATION.md) | Verified empirical benchmark report (YOLO latency, throughput, agent grounding). |
 | [**Dataset & Models Specification**](docs/DATASET_AND_MODELS.md) | YOLO checkpoint selection, class taxonomy, and PPE association math. |

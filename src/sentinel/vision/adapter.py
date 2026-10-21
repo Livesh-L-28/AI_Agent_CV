@@ -7,7 +7,7 @@ inference latency tracking, and frame annotation.
 import os
 import time
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
 import cv2
 import numpy as np
@@ -15,6 +15,7 @@ from ultralytics import YOLO
 
 from sentinel.logging import setup_logging
 from sentinel.vision.geometry import denormalize_bbox, normalize_bbox
+from sentinel.vision.metrics import get_vision_metrics_provider
 from sentinel.vision.types import Detection, InferenceResult, ModelMetadata
 
 logger = setup_logging()
@@ -106,6 +107,45 @@ class YOLOAdapter:
         available = {name.lower() for name in self.class_map.values()}
         return {cls: (cls.lower() in available) for cls in required_classes}
 
+    def get_capabilities(self) -> dict[str, Any]:
+        """
+        Introspects model classes and reports whether industrial PPE detection is supported.
+        Explicitly distinguishes general COCO-80 from dedicated PPE fine-tuned checkpoints.
+        """
+        helmet_classes = {"helmet", "hardhat", "hard_hat", "safety_helmet"}
+        vest_classes = {"vest", "safety_vest", "hi_vis_vest", "reflective_vest"}
+        goggle_classes = {"goggles", "safety_goggles", "protective_eyewear"}
+
+        available = {name.lower() for name in self.class_map.values()}
+        has_helmet = bool(available & helmet_classes)
+        has_vest = bool(available & vest_classes)
+        has_goggles = bool(available & goggle_classes)
+        ppe_supported = has_helmet or has_vest
+
+        return {
+            "model_name": os.path.basename(self.model_path),
+            "total_classes": len(self.class_map),
+            "supports_person": "person" in available,
+            "supports_ppe": ppe_supported,
+            "supported_ppe_types": {
+                "HARDHAT": has_helmet,
+                "SAFETY_VEST": has_vest,
+                "GOGGLES": has_goggles,
+            },
+            "dataset_type": "CUSTOM_PPE" if ppe_supported else "COCO_80",
+            "ppe_capability_status": "SUPPORTED" if ppe_supported else "UNSUPPORTED_COCO_BASE",
+            "guidance": (
+                "Active model supports industrial PPE detection."
+                if ppe_supported
+                else (
+                    "Active model is base COCO-80 which lacks hardhat and safety vest classes. "
+                    "PPE compliance rules are bypassed to prevent false-positive violations. "
+                    "Configure a licensed PPE-specific model (e.g. trained on SHWD or Pictor-PPE) "
+                    "via YOLO_MODEL_PATH in environment configuration."
+                )
+            ),
+        }
+
     def infer(self, frame: np.ndarray, frame_id: int = 0) -> InferenceResult:
         """
         Runs object detection on a single frame.
@@ -156,6 +196,14 @@ class YOLOAdapter:
                         track_id=track_id,
                     )
                 )
+
+        # Record empirical live telemetry
+        persons_detected = len([d for d in detections if d.class_name == "person"])
+        get_vision_metrics_provider().record_inference(
+            latency_ms=latency_ms,
+            detected_persons=persons_detected,
+            device=self.device,
+        )
 
         return InferenceResult(
             frame_id=frame_id,

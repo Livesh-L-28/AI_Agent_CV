@@ -1,5 +1,12 @@
 # SENTINEL AI — System Architecture
 
+> [!IMPORTANT]
+> ### Safety Advisory Notice & Legal Disclaimer (DEF-12)
+> **SENTINEL AI is an engineering research and advisory monitoring prototype.**
+> - It is **NOT** certified safety-critical software and does **NOT** possess OSHA certification, CE machinery directive compliance, or industrial safety certification (e.g., ISO 13849, IEC 61508, or IEC 62061 SIL ratings).
+> - It **CANNOT** and must never be used as an emergency-stop (E-Stop) device, physical machine interlocking mechanism, or sole life-safety protection system.
+> - The software is intended solely to provide advisory observational assistance to qualified safety personnel and does not replace certified hardware interlocks, mandatory statutory inspections, or licensed safety officers.
+
 ## 1. High-Level System Architecture
 
 SENTINEL AI is an AI-assisted industrial safety monitoring platform engineered with a strict separation between **deterministic safety logic** and **probabilistic agent reasoning**.
@@ -82,7 +89,8 @@ SENTINEL AI is an AI-assisted industrial safety monitoring platform engineered w
 - `YOLOAdapter`: Abstraction wrapping Ultralytics YOLO models with validated class maps, confidence filtering, and device auto-detection (`cpu`, `mps`, `cuda`).
 - `PPEAdapter`: Specialized PPE detection interface with explicit class maps (`helmet`, `vest`, `no_helmet`, `no_vest`).
 - `CoordinateUtils`: Normalization between pixel space `[x1, y1, x2, y2]` and unit space `[0.0, 1.0]`.
-- `GroundContactEstimator`: Calculates bottom-center ground contact points for workers to accurately determine polygon containment.
+- `GroundContactEstimator`: Calculates bottom-center ground contact points for workers to accurately determine polygon containment (with documented parallax and occlusion limitations).
+- `PlanarHomography`: Projective 2D transformation mapping camera image points to calibrated metric ground-plane coordinates via $\ge 4$ point correspondences.
 - `TrackerAdapter`: Stable multi-object tracking (ByteTrack) maintaining persistent track IDs across frames.
 
 ### 3.3 Spatial Rules & Event Engine (`src/sentinel/rules/`)
@@ -117,3 +125,16 @@ SENTINEL AI is an AI-assisted industrial safety monitoring platform engineered w
 - React 18 + TypeScript + Vite.
 - Vanilla CSS / CSS Modules with an industrial dark theme (`#0B1120`, `#1E293B`, `#38BDF8`, `#EF4444`).
 - Pages: Overview, Live Monitoring, Source Management, Events & Incidents, Agent Trace Viewer, Model Evaluation, Zone Editor.
+
+### 3.8 Camera Management & Real-Time Streaming Pipeline (`src/sentinel/vision/camera_manager.py`)
+- `CameraManager`: Thread-safe registry and lifecycle coordinator for physical webcams, IP RTSP streams, browser frame streams, and synthetic replay video.
+- `CameraPipelineWorker`: Isolated `asyncio.Task` worker per camera providing:
+  - Bounded backpressure frame queue (`BoundedFrameBuffer`, max depth 10, drops oldest when processing falls behind).
+  - Staleness guard: frames older than 500ms are dropped before inference.
+  - Concurrency limiting: `asyncio.Semaphore(2)` guards GPU/MPS acceleration to prevent inference contention.
+  - Independent failure domains: stream read errors or connection dropouts on one camera do not disrupt other cameras.
+  - Dynamic JPEG frame encoding for low-latency browser streaming.
+- `RTSPCameraSource`: Server-side socket connection handling with timeout detection and bounded exponential backoff with jitter (`backoff_factor=1.5`, max 30s).
+- `BrowserWebcamSource`: Client-side browser capture (`getUserMedia`) pushing frames via authenticated `POST /api/v1/cameras/{id}/ingest`.
+- Low-Latency Browser Streaming: Authenticated MJPEG (`GET /api/v1/cameras/{id}/live?token=...`) coupled with synchronized WebSocket telemetry broadcasting.
+- Security Guards: `validate_camera_uri()` rejects SSRF cloud metadata probes, directory traversal, and non-RTSP schemes; `sanitize_camera_uri()` masks credentials.

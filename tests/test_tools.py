@@ -9,6 +9,7 @@ from sentinel.db.repositories.event_repo import EventRepository
 from sentinel.db.repositories.source_repo import SourceRepository
 from sentinel.db.session import get_db_session, init_db
 from sentinel.rules.types import EventSeverity, EventType, SafetyEventCandidate
+from sentinel.security.auth import SYSTEM_CALLER, AuthenticatedUser, UserRole
 
 
 @pytest.fixture(autouse=True)
@@ -19,15 +20,61 @@ async def setup_db():
 @pytest.mark.asyncio
 async def test_unauthorized_tool_rejection():
     async with get_db_session() as session:
-        # Attempt to run arbitrary shell or unauthorized tool
+        # 1. Attempt to run arbitrary shell or unauthorized tool with system caller
         result = await execute_tool(
             session=session,
             tool_name="execute_shell_command",
             parameters={"command": "rm -rf /"},
             idempotency_key="idemp_shell_1",
+            caller=SYSTEM_CALLER,
         )
         assert result.status == "REJECTED_UNAUTHORIZED"
         assert "not in the authorized Sentinel AI allowlist" in result.error
+
+
+@pytest.mark.asyncio
+async def test_direct_tool_invocation_requires_caller():
+    async with get_db_session() as session:
+        # 2. Attempt to invoke tool without any authenticated caller
+        result = await execute_tool(
+            session=session,
+            tool_name="create_incident",
+            parameters={
+                "incident_id": "inc_no_caller",
+                "event_id": "evt_no_caller",
+                "title": "Breach",
+                "severity": "HIGH",
+            },
+            idempotency_key="idemp_no_caller",
+            caller=None,
+        )
+        assert result.status == "REJECTED_UNAUTHORIZED"
+        assert "requires an authorized caller" in result.error
+
+
+@pytest.mark.asyncio
+async def test_tool_role_enforcement():
+    async with get_db_session() as session:
+        # Low-privilege viewer attempting privileged tool
+        viewer_caller = AuthenticatedUser(
+            user_id="usr_viewer_test",
+            username="viewer_bob",
+            role=UserRole.VIEWER,
+        )
+        result = await execute_tool(
+            session=session,
+            tool_name="create_incident",
+            parameters={
+                "incident_id": "inc_viewer_test",
+                "event_id": "evt_viewer_test",
+                "title": "Breach",
+                "severity": "HIGH",
+            },
+            idempotency_key="idemp_viewer_test",
+            caller=viewer_caller,
+        )
+        assert result.status == "REJECTED_UNAUTHORIZED"
+        assert "is not authorized to execute tool" in result.error
 
 
 @pytest.mark.asyncio
@@ -63,6 +110,7 @@ async def test_create_incident_and_idempotency():
                 "severity": "CRITICAL",
             },
             idempotency_key="idemp_inc_01",
+            caller=SYSTEM_CALLER,
         )
         assert res1.status == "SUCCESS"
         assert res1.output["already_existed"] is False
@@ -78,6 +126,7 @@ async def test_create_incident_and_idempotency():
                 "severity": "CRITICAL",
             },
             idempotency_key="idemp_inc_01",
+            caller=SYSTEM_CALLER,
         )
         assert res2.status == "SUCCESS"
         assert res2.output["already_existed"] is True
@@ -116,6 +165,7 @@ async def test_send_alert_duplicate_prevention():
                 "severity": "HIGH",
             },
             idempotency_key="idemp_inc_02",
+            caller=SYSTEM_CALLER,
         )
 
         # 1. Send first alert
@@ -130,6 +180,7 @@ async def test_send_alert_duplicate_prevention():
                 "message": "Immediate attention required",
             },
             idempotency_key=idemp_alert,
+            caller=SYSTEM_CALLER,
         )
         assert alert_res1.status == "SUCCESS"
         assert alert_res1.output["duplicate_prevented"] is False
@@ -145,6 +196,7 @@ async def test_send_alert_duplicate_prevention():
                 "message": "Immediate attention required",
             },
             idempotency_key=idemp_alert,
+            caller=SYSTEM_CALLER,
         )
         assert alert_res2.status == "SUCCESS"
         assert alert_res2.output["duplicate_prevented"] is True

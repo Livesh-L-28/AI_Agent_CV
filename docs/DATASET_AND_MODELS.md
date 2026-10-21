@@ -37,13 +37,28 @@ adapter = YOLOAdapter("yolov8n.pt")
 assert adapter.has_class("person") is True
 ```
 
-### 2.2 OSHA Spatial Zone Ground Contact Calculation
+### 2.2 Spatial Zone Ground Contact Calculation & Planar Homography (DEF-08)
 
-A critical vulnerability in naive video analytics is using bounding box center `(cx, cy)` for spatial zone containment. In three-dimensional industrial floors, using center points creates massive parallax distortion: a worker standing outside a restricted zone whose head leans into the camera's perspective will falsely trigger an alarm.
+#### Bottom-Center Heuristic & Limitations
+A vulnerability in naive video analytics is using bounding box center `(cx, cy)` for spatial zone containment. In three-dimensional industrial floors, using center points creates massive perspective distortion: a worker standing outside a restricted zone whose head leans into the camera's perspective falsely triggers an alarm.
 
-SENTINEL AI strictly implements the **Ground Contact Point** standard:
+SENTINEL AI implements the **Ground Contact Point** heuristic:
 $$\mathbf{P}_{\text{ground}} = \left(\frac{x_1 + x_2}{2}, y_2\right)$$
-where $x_1, y_1, x_2, y_2 \in [0.0, 1.0]$ are normalized bounding box coordinates. Zone containment is determined solely by $\mathbf{P}_{\text{ground}}$ intersecting the configured polygonal boundary via Shapely `Point.within(Polygon)`.
+where $x_1, y_1, x_2, y_2 \in [0.0, 1.0]$ are normalized bounding box coordinates. Zone containment is evaluated by $\mathbf{P}_{\text{ground}}$ intersecting the configured polygonal boundary via Shapely `Point.within(Polygon)`.
+
+**Critical Geometric Limitations (DEF-08):**
+1. **Monocular Perspective Parallax:** Oblique camera angles project physical foot contact away from the optical vertical axis. Bottom-center estimation does not eliminate 3D perspective distortion.
+2. **Foot Occlusion:** If machinery, pallets, or guardrails occlude a worker's lower body, the bottom edge of the detected bounding box reflects the occlusion boundary, not physical floor contact.
+3. **Non-Upright Postures:** Bending, crouching, kneeling, or operating elevated machinery displaces the bounding box bottom from actual foot position.
+4. **Elevation Changes:** Ramps, stairs, mezzanine levels, and pits violate horizontal coplanar assumptions.
+
+#### Optional Camera-Specific Planar Homography Calibration
+To convert 2D image coordinates into calibrated metric ground-plane coordinates (e.g., meters on a factory floor), SENTINEL AI provides `sentinel.vision.geometry.PlanarHomography`:
+- Computed via $\ge 4$ non-collinear point correspondences between camera image space and surveyed floor coordinates ($H \in \mathbb{R}^{3 \times 3}$).
+- Validates coordinate bounds, non-collinear configurations, and matrix non-singularity.
+- Maps detected positions to planar coordinates via $[X, Y, 1]^T \sim H [u, v, 1]^T$.
+- Provides exact inverse mapping $H^{-1}$ back to camera view space.
+- *Notice:* Planar homography assumes points lie strictly on the calibrated flat plane ($Z = 0$) and does NOT guarantee universal parallax-free positioning across multi-elevation facilities.
 
 ---
 
@@ -65,6 +80,40 @@ Single-frame occlusions (e.g., worker turning away from camera, temporary crane 
 - **1-Frame Dropout:** Categorized as `UNCERTAIN` or `OCCLUDED`. No alarm emitted.
 - **Sustained Absence ($\ge 6$ consecutive frames):** State transitions to `NON_COMPLIANT`. Emits `SafetyEventCandidate(event_type=PPE_VIOLATION)`.
 - **Cooldown Window (15.0 seconds):** Deduplication prevents repeated alert storms while the worker remains in the same violation state.
+
+### 3.3 PPE Capability Guard & Fine-Tuned Model Configuration (DEF-02)
+
+#### Baseline COCO Behavior & False Positive Prevention
+Standard COCO checkpoints (`yolov8n.pt`) contain generic object classes (e.g., `person`, `car`, `backpack`), but **lack specialized PPE classes** (`helmet`, `hard-hat`, `vest`, `safety-vest`). Naively attempting PPE violation detection against a base COCO model would mark 100% of workers non-compliant, generating spurious alarms.
+
+To prevent this:
+1. `YOLOAdapter.get_capabilities()` introspects `model.names` at runtime.
+2. If PPE classes are absent, `has_ppe_classes` evaluates to `False`.
+3. In `PPERuleEngine`, `ppe_capability_enabled` is set to `False`, suppressing PPE violation candidate generation while preserving person tracking and restricted-zone monitoring.
+4. Model capability metadata is exposed via `GET /api/v1/analytics/capabilities`.
+
+#### Configuring a Fine-Tuned PPE Model
+To enable live PPE violation detection in production environments:
+1. **Model Weights:** Train or acquire YOLO weights on a recognized industrial safety dataset (e.g., [Pictor-PPE](https://github.com/cvaldez98/Pictor-PPE), [SHWD - Safe Hat Worker Dataset](https://github.com/njvisionpower/Safety-Helmet-Wearing-Dataset), or [Roboflow Construction PPE](https://universe.roboflow.com/roboflow-universe-projects/construction-site-safety)).
+2. **Supported Class Taxonomy:** The model must expose labeled classes matching common PPE nomenclature:
+   - Helmets: `helmet`, `hard-hat`, `hard hat`, or `hardhat`
+   - Vests: `vest`, `safety-vest`, `high-vis-vest`, or `reflective-vest`
+   - Workers: `person` or `worker`
+3. **Environment Configuration:** Set `YOLO_MODEL_PATH` in `.env` or system environment:
+   ```bash
+   export YOLO_MODEL_PATH="weights/yolov8n_ppe_production.pt"
+   ```
+4. **Verification:** Inspect the `/api/v1/analytics/capabilities` endpoint:
+   ```json
+   {
+     "model_name": "weights/yolov8n_ppe_production.pt",
+     "has_person_class": true,
+     "has_ppe_classes": true,
+     "supported_ppe_classes": ["hard-hat", "safety-vest"],
+     "missing_ppe_classes": ["gloves", "goggles", "boots"]
+   }
+   ```
+5. **Testing & Validation:** In unit and integration test environments (`tests/test_ppe.py`), person and PPE detections are explicitly injected via deterministic synthetic fixtures to validate anatomical matching and temporal smoothing without ungrounded real-inference claims.
 
 ---
 
