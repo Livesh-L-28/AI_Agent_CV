@@ -33,6 +33,7 @@ class Settings(BaseSettings):
     yolo_iou_threshold: float = Field(default=0.45, ge=0.0, le=1.0)
     yolo_device: str = "auto"  # "auto", "cpu", "mps", "cuda"
     inference_image_size: int = 640
+    enable_camera_autostart: bool = False
 
     # Temporal Rules & Safety Thresholds
     zone_persistence_frames: int = Field(default=5, ge=1)

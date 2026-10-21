@@ -10,7 +10,7 @@ services:
     plan: free
     region: oregon
     dockerfilePath: ./Dockerfile
-    healthCheckPath: /health/ready
+    healthCheckPath: /health/live
     autoDeploy: true
     envVars:
       - key: PORT
@@ -26,7 +26,7 @@ services:
       - key: ENABLE_MOCK_LLM
         value: "true"
       - key: DATABASE_URL
-        value: sqlite+aiosqlite:///./data/sentinel.db
+        value: sqlite+aiosqlite:////app/data/sentinel.db
       - key: SENTINEL_JWT_SECRET_KEY
         generateValue: true
       - key: ALLOWED_ORIGINS

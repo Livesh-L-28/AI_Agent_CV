@@ -44,7 +44,7 @@ async def lifespan(app: FastAPI):
 
     # Auto-register and start default facility camera if fixture video exists
     fixture_video = Path("data/fixtures/synthetic_safety_video.mp4")
-    if fixture_video.exists():
+    if fixture_video.exists() and settings.enable_camera_autostart:
         try:
             from sentinel.vision.camera_manager import get_camera_manager
             from sentinel.vision.sources.camera import CameraConfig, CameraType
