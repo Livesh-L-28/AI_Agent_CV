@@ -7,6 +7,7 @@
 [![FastAPI](https://img.shields.io/badge/Backend-FastAPI%20Async-009688.svg?style=flat-square&logo=fastapi)](https://fastapi.tiangolo.com)
 [![React TypeScript](https://img.shields.io/badge/Frontend-React%2018%20%2B%20TypeScript-3178c6.svg?style=flat-square&logo=typescript)](frontend/)
 [![Docker](https://img.shields.io/badge/Docker-Multi--Stage%20Compose-2496ed.svg?style=flat-square&logo=docker)](Dockerfile)
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/Livesh-L-28/AI_Agent_CV)
 [![License](https://img.shields.io/badge/License-MIT-lightgrey.svg?style=flat-square)](LICENSE)
 
 > [!IMPORTANT]
