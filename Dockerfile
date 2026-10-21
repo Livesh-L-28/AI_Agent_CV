@@ -1,19 +1,7 @@
-# ==========================================
-# Stage 1: Build React Frontend
-# ==========================================
-FROM node:20-alpine AS frontend-builder
-WORKDIR /app/frontend
-
-COPY frontend/package*.json ./
-RUN npm ci
-
-COPY frontend/ ./
-RUN npm run build
-
-# ==========================================
-# Stage 2: Production Python Runtime
-# ==========================================
-FROM python:3.12-slim AS runner
+# ==============================================================================
+# SENTINEL AI — Unified Production Container (FastAPI + React 3D SPA)
+# ==============================================================================
+FROM python:3.12-slim
 
 # Prevent Python from writing .pyc and enable unbuffered output
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -41,12 +29,10 @@ COPY alembic.ini ./
 COPY scripts/ ./scripts/
 COPY yolov8n.pt ./
 COPY data/fixtures/ ./data/fixtures/
+COPY frontend/dist/ ./frontend/dist/
 
 # Install application and production dependencies with PyTorch CPU wheels to minimize image size
 RUN uv pip install --system --no-cache --extra-index-url https://download.pytorch.org/whl/cpu .
-
-# Copy built frontend assets from Stage 1
-COPY --from=frontend-builder /app/frontend/dist ./frontend/dist
 
 # Create storage directories with explicit permissions
 RUN mkdir -p /app/data/evidence /app/data/uploads /app/data/fixtures

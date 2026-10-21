@@ -6,7 +6,7 @@ __pycache__/
 .Python
 build/
 develop-eggs/
-dist/
+/dist/
 downloads/
 eggs/
 .eggs/
@@ -64,8 +64,8 @@ node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-frontend/dist/
 frontend/dist-ssr/
+!frontend/dist/**
 frontend/.env.local
 
 # Media storage & model weights
