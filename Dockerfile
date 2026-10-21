@@ -37,13 +37,18 @@ RUN uv pip install --system --no-cache --extra-index-url https://download.pytorc
 # Create storage directories with explicit permissions
 RUN mkdir -p /app/data/evidence /app/data/uploads /app/data/fixtures
 
-# Expose HTTP API & WebSocket port (Render dynamically sets $PORT, default 10000 on Render)
-ENV PORT=10000
+# Default runtime environment variables (overridden by Render or docker-compose)
+ENV PORT=10000 \
+    ENVIRONMENT=production \
+    ENABLE_CAMERA_AUTOSTART=false \
+    LOG_LEVEL=INFO \
+    SERVE_FRONTEND=true \
+    JWT_SECRET_KEY="sentinel-production-default-jwt-secret-signing-key-64chars-min-safe"
 EXPOSE 10000
 
-# Container healthcheck against verified health/readiness endpoint
+# Container healthcheck against verified liveness endpoint
 HEALTHCHECK --interval=15s --timeout=5s --start-period=10s --retries=3 \
-    CMD curl -f http://localhost:${PORT:-10000}/health/ready || exit 1
+    CMD curl -f http://localhost:${PORT:-10000}/health/live || exit 1
 
 # Default command: launch production ASGI server with uvicorn respecting $PORT
 CMD ["sh", "-c", "uvicorn sentinel.api.app:app --host 0.0.0.0 --port ${PORT:-10000} --workers 1"]

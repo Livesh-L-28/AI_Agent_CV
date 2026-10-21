@@ -255,3 +255,13 @@ def test_missing_production_secrets_prevent_startup():
     )
     prod_settings_valid.validate_auth_secrets()
     assert prod_settings_valid.get_jwt_secret_key() == valid_key
+
+    # Alias SENTINEL_JWT_SECRET_KEY in production loads correctly
+    import os
+    os.environ["SENTINEL_JWT_SECRET_KEY"] = "b" * 32
+    try:
+        alias_settings = Settings(environment="production")
+        alias_settings.validate_auth_secrets()
+        assert alias_settings.get_jwt_secret_key() == "b" * 32
+    finally:
+        os.environ.pop("SENTINEL_JWT_SECRET_KEY", None)
