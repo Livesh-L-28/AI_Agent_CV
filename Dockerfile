@@ -33,11 +33,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Install uv for ultra-fast deterministic Python package management
 RUN pip install --no-cache-dir uv
 
-# Copy project metadata and install production dependencies
-COPY pyproject.toml ./
-RUN uv pip install --system --no-cache -e .
-
-# Copy application code, database migrations, and pre-trained YOLO checkpoint
+# Copy project metadata, README, and source code before building/installing package
+COPY pyproject.toml README.md ./
 COPY src/ ./src/
 COPY alembic/ ./alembic/
 COPY alembic.ini ./
@@ -45,19 +42,22 @@ COPY scripts/ ./scripts/
 COPY yolov8n.pt ./
 COPY data/fixtures/ ./data/fixtures/
 
+# Install application and production dependencies with PyTorch CPU wheels to minimize image size
+RUN uv pip install --system --no-cache --extra-index-url https://download.pytorch.org/whl/cpu .
+
 # Copy built frontend assets from Stage 1
 COPY --from=frontend-builder /app/frontend/dist ./frontend/dist
 
 # Create storage directories with explicit permissions
 RUN mkdir -p /app/data/evidence /app/data/uploads /app/data/fixtures
 
-# Expose HTTP API & WebSocket port (Render dynamically sets $PORT)
-ENV PORT=8000
-EXPOSE 8000
+# Expose HTTP API & WebSocket port (Render dynamically sets $PORT, default 10000 on Render)
+ENV PORT=10000
+EXPOSE 10000
 
 # Container healthcheck against verified health/readiness endpoint
 HEALTHCHECK --interval=15s --timeout=5s --start-period=10s --retries=3 \
-    CMD curl -f http://localhost:${PORT:-8000}/health/ready || exit 1
+    CMD curl -f http://localhost:${PORT:-10000}/health/ready || exit 1
 
 # Default command: launch production ASGI server with uvicorn respecting $PORT
-CMD ["sh", "-c", "uvicorn sentinel.api.app:app --host 0.0.0.0 --port ${PORT:-8000} --workers 1"]
+CMD ["sh", "-c", "uvicorn sentinel.api.app:app --host 0.0.0.0 --port ${PORT:-10000} --workers 1"]

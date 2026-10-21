@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "factory_id": "factory-plant-alpha",
-  "name": "Verified Officer Facility Layout",
+  "name": "Authorized Facility Update",
   "site_id": "site-detroit-01",
   "dimensions": {
     "width_meters": 60.0,
@@ -379,7 +379,7 @@
         ]
       ],
       "enabled": true,
-      "status": "DISCONNECTED"
+      "status": "UNREGISTERED"
     },
     {
       "camera_id": "cam-perimeter-01",
@@ -460,5 +460,5 @@
     }
   ],
   "updated_at": "2026-10-21T08:00:00Z",
-  "updated_by": "twin_officer"
+  "updated_by": "officer"
 }

@@ -13,6 +13,8 @@ services:
     healthCheckPath: /health/ready
     autoDeploy: true
     envVars:
+      - key: PORT
+        value: "10000"
       - key: ENVIRONMENT
         value: production
       - key: LOG_LEVEL
